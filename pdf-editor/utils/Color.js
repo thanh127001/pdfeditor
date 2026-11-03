@@ -1,0 +1,1 @@
+export const normalizeHex=color=>String(color).toLowerCase();

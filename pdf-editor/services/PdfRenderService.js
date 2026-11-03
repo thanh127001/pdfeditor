@@ -1,0 +1,1 @@
+export class PdfRenderService {constructor(engine){this.engine=engine;}async render(page,canvas,width){return this.engine.renderThumbnail(page,canvas,width);}}

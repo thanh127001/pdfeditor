@@ -1,18 +1,9 @@
-# PDF Editor — static ES Modules refactor
+# PDF Editor static modular refactor
 
-Source: `PDFEditor_Auto_Select_Object_Tool (1).html` (preserved unchanged).
+Run `python -m http.server 8000` from repository root, open `http://localhost:8000/`. CDN libraries need Internet. No backend or database.
 
-Open `index.html` via a local HTTP server, e.g. `python -m http.server 8000`, then browse `http://localhost:8000/`. ES modules are not reliably supported under `file://`. External Bootstrap/PDF.js/pdf-lib CDN dependencies still require internet access.
+This is an **incremental OOP refactor**. The original handlers remain in `core/EditorRuntime.js` as a compatibility adapter, so existing behavior is retained. Tool, UI, and command classes have been separated as modules but **are not yet wired to replace the original implementations**. Do not consider this a fully completed OOP migration.
 
-## Architecture
-- `pdf-editor/index.js`: entry point.
-- `pdf-editor/PdfEditor.js`: OOP application root; retains original editor interaction logic to minimize regressions.
-- `pdf-editor/core/EventBus.js`: native EventTarget/CustomEvent.
-- `pdf-editor/core/EditorState.js`: view, page, tool, selection state container (initial integration).
-- `pdf-editor/core/ToolSettingsManager.js`: fixed Image defaults, configurable rememberChanges for other tools.
-- `pdf-editor/services/PdfEngine.js`: PDF import/render/export module.
+`PdfEditor.js` is the application root; `EventBus`, `EditorState`, `ToolManager`, `PageManager`, and `ToolSettingsManager` provide the architecture for further extraction. Image defaults remain fixed.
 
-## Migration status
-This is an **initial modularization**, not a complete decomposition of every tool, UI view and command into classes. The original closures and handlers remain in `PdfEditor.initialize()`. Lifecycle events include `page:opening`, `page:opened`, `view:changed`, `tool:changed`, `page:editing`. Existing undo/history and editor behavior remain implemented by original code.
-
-No server API/database required.
+Before production: test PDF import, page selection, each drawing tool, undo, drag/drop, and flatten export in a browser.

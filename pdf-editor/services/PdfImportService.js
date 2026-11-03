@@ -1,0 +1,1 @@
+export class PdfImportService {constructor(engine){this.engine=engine;}async import(file){return this.engine.importPdf(file);}}

@@ -1,0 +1,1 @@
+export class ThumbnailService {constructor(engine){this.engine=engine;}async render(page,canvas,width=190){return this.engine.renderThumbnail(page,canvas,width);}}

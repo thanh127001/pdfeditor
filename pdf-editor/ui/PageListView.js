@@ -1,0 +1,1 @@
+export class PageListView {constructor(events,element=null){this.events=events;this.element=element;this.unsubscribers=[];}on(name,handler){this.unsubscribers.push(this.events.on(name,handler));}dispose(){for(const off of this.unsubscribers)off();this.unsubscribers=[];}}

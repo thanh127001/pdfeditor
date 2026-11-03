@@ -1,0 +1,1 @@
+export class PdfExportService {constructor(engine){this.engine=engine;}async export(pages,overlays){return this.engine.exportPdf(pages,overlays);}}
