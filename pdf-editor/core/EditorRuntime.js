@@ -963,9 +963,9 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const measure=document.createElement('canvas').getContext('2d');
     measure.font=fontSize+'px '+(t.font||'Arial');
     let lines=0;
-    for(const line of String(t.content||'').split('\\n')){
+    for(const line of String(t.content||'').split('\n')){
       let segment='',count=1;
-      for(const word of line.split(/(\\s+)/)){
+      for(const word of line.split(/(\s+)/)){
         if(segment&&measure.measureText(segment+word).width>width){count++;segment='';}
         segment+=word;
       }
@@ -1133,6 +1133,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       }
       if(t.id===selectedTextId)appendObjectDeleteButton(box,'Text',()=>{recordPageEdit(currentPage());currentPage().texts=currentPage().texts.filter(v=>v.id!==t.id);selectedTextId=null;renderTextOptions();renderTexts();updateButtons();});
       textLayer.append(box);
+      applyTextAlignment(textarea,t);
     }
   }
   function textPoint(e) {
