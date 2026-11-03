@@ -545,12 +545,39 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         } else if(s.type==='Ellipse') {
           ctx.ellipse(xx+ww/2,yy+hh/2,Math.max(.01,ww/2),Math.max(.01,hh/2),0,0,2*Math.PI);
         } else ctx.rect(xx,yy,ww,hh);
-        if(s.type!=='Line' && Number(s.fillOpacity)>0) {
-          ctx.fillStyle=color(s.fill,s.fillOpacity);ctx.fill();
-        }
         if(Number(s.strokeWidth)>0 && Number(s.opacity)>0) {
           ctx.strokeStyle=color(s.stroke,s.opacity);
-          ctx.lineWidth=Number(s.strokeWidth)*W/600;ctx.stroke();
+          const strokeWidth=Number(s.strokeWidth)*W/600;
+          if(s.type==='Line') {
+            ctx.lineWidth=strokeWidth;
+            ctx.stroke();
+          } else {
+            // Stroke is fully outside the fill geometry, including transparent fills.
+            // Clip the doubled, centered stroke to the inverse of the shape.
+            ctx.save();
+            ctx.beginPath();
+            const margin=Math.max(W,H)*4;
+            ctx.rect(-margin,-margin,margin*2,margin*2);
+            if(s.type==='Ellipse') {
+              ctx.ellipse(xx+ww/2,yy+hh/2,Math.max(.01,ww/2),Math.max(.01,hh/2),0,0,2*Math.PI);
+            } else ctx.rect(xx,yy,ww,hh);
+            ctx.clip('evenodd');
+            ctx.beginPath();
+            if(s.type==='Ellipse') {
+              ctx.ellipse(xx+ww/2,yy+hh/2,Math.max(.01,ww/2),Math.max(.01,hh/2),0,0,2*Math.PI);
+            } else ctx.rect(xx,yy,ww,hh);
+            ctx.lineWidth=strokeWidth*2;
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+        if(s.type!=='Line' && Number(s.fillOpacity)>0) {
+          ctx.beginPath();
+          if(s.type==='Ellipse') {
+            ctx.ellipse(xx+ww/2,yy+hh/2,Math.max(.01,ww/2),Math.max(.01,hh/2),0,0,2*Math.PI);
+          } else ctx.rect(xx,yy,ww,hh);
+          ctx.fillStyle=color(s.fill,s.fillOpacity);
+          ctx.fill();
         }
       });
     }
@@ -1186,7 +1213,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       if(item.type==='Rectangle'||item.type==='Ellipse')box.style.transform=`rotate(${item.angle||0}deg)`;
       const svg=document.createElementNS(NS,'svg');
       svg.setAttribute('viewBox','0 0 100 100');svg.setAttribute('preserveAspectRatio','none');
-      svg.style.width='100%';svg.style.height='100%';svg.style.display='block';svg.style.overflow='visible';
+      svg.style.width='100%';svg.style.height='100%';svg.style.display='block';svg.style.overflow='visible';box.style.overflow='visible';
       let figure;
       if(item.type==='Line') {
         figure=document.createElementNS(NS,'line');
@@ -1234,7 +1261,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       box.append(svg);
       if(item.id===selectedShapeId && item.type===activeDetailsTool) {
         box.style.outline='1px dashed #0d6efd';
-        if(item.type==='Rectangle'||item.type==='Ellipse') box.style.outlineOffset=Math.max(0,Number(item.strokeWidth)||0)+'px';
+        if(item.type==='Rectangle'||item.type==='Ellipse') box.style.outlineOffset=(Math.max(0,Number(item.strokeWidth)||0)+2)+'px';
         for(const corner of (item.type==='Line' ? ['line-start','line-end'] : ['nw','ne','sw','se'])) {
           const handle=document.createElement('div');handle.dataset.shapeHandle=corner;
           handle.className=item.type==='Line'?'position-absolute bg-primary border border-white rounded-circle':'position-absolute bg-primary';
