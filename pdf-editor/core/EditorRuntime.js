@@ -738,21 +738,20 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     makeControl('Height', 'range', 'highlightHeight', settings.height, 0.5, 15, 0.5);
     makeControl('Color', 'color', 'highlightColor', settings.color);
     makeControl('Opacity', 'range', 'highlightOpacity', settings.opacity, 5, 100, 5);
-    if (selectedObject) {
-      const remove = document.createElement('button');
-      remove.type = 'button'; remove.className = 'btn btn-sm btn-outline-danger ms-auto';
-      remove.innerHTML = '<i class="bi bi-trash me-1"></i>Delete Highlight';
-      remove.addEventListener('click', () => {
-        recordPageEdit(currentPage());
-        currentPage().highlights = currentPage().highlights.filter(h => h.id !== selectedHighlightId);
-        selectedHighlightId = null; renderHighlightOptions(); renderHighlights(); updateButtons();
-      });
-      content.append(remove);
-    }
     const hint = document.createElement('span');
     hint.className = 'small text-secondary w-100';
     hint.textContent = 'Drag horizontally on the page to highlight';
     content.append(hint);
+  }
+  function appendObjectDeleteButton(box,label,onDelete,offset=0){
+    const b=document.createElement('button');b.type='button';
+    b.className='position-absolute d-flex align-items-center justify-content-center bg-white border border-danger rounded-circle text-danger';
+    b.style.cssText='width:24px;height:24px;top:-30px;right:'+offset+'px;z-index:20;cursor:pointer;touch-action:none;padding:0;pointer-events:auto';
+    b.title='Delete '+label;b.setAttribute('aria-label','Delete '+label);
+    b.innerHTML='<i class="bi bi-trash" style="font-size:13px;pointer-events:none"></i>';
+    for(const name of ['pointerdown','mousedown','touchstart','dblclick'])b.addEventListener(name,e=>e.stopPropagation());
+    b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();onDelete();});
+    box.append(b);
   }
   function renderHighlights() {
     const layer = $('highlightLayer');
@@ -783,6 +782,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
           el.append(handle);
         }
       }
+      if(h.id===selectedHighlightId)appendObjectDeleteButton(el,'Highlight',()=>{recordPageEdit(currentPage());currentPage().highlights=currentPage().highlights.filter(v=>v.id!==h.id);selectedHighlightId=null;renderHighlightOptions();renderHighlights();updateButtons();});
       layer.append(el);
     }
   }
@@ -966,16 +966,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       slider.addEventListener('change', () => { saved = false; });
       group.append(label, slider, value); content.append(group);
     }
-    if (obj) {
-      const remove = document.createElement('button'); remove.type='button';
-      remove.className='btn btn-sm btn-outline-danger ms-auto';
-      remove.innerHTML='<i class="bi bi-trash me-1"></i>Delete Text';
-      remove.addEventListener('click',()=>{
-        recordPageEdit(currentPage());
-        currentPage().texts = currentPage().texts.filter(t=>t.id!==selectedTextId);
-        selectedTextId=null; renderTextOptions(); renderTexts(); updateButtons();
-      }); content.append(remove);
-    }
     const hint=document.createElement('span'); hint.className='small text-secondary w-100';
     hint.textContent='Click the page to add text, then edit or drag the text box'; content.append(hint);
   }
@@ -1043,6 +1033,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         rotateHandle.innerHTML='<i class="bi bi-arrow-clockwise text-primary" style="font-size:12px;pointer-events:none"></i>';
         box.append(rotateHandle);
       }
+      if(t.id===selectedTextId)appendObjectDeleteButton(box,'Text',()=>{recordPageEdit(currentPage());currentPage().texts=currentPage().texts.filter(v=>v.id!==t.id);selectedTextId=null;renderTextOptions();renderTexts();updateButtons();});
       textLayer.append(box);
     }
   }
@@ -1182,18 +1173,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       });
       group.append(input,label);content.append(group);
     }
-    {
-      const del=document.createElement('button');del.type='button';
-      del.className='btn btn-sm btn-outline-danger ms-auto';
-      del.innerHTML='<i class="bi bi-trash me-1"></i>Delete '+activeDetailsTool;
-      del.disabled=!obj;
-      del.addEventListener('click',()=>{
-        const selected=currentShape();if(!selected)return;
-        recordPageEdit(currentPage());
-        currentPage().shapes=currentPage().shapes.filter(v=>v.id!==selected.id);
-        selectedShapeId=null;renderShapeOptions();renderShapes();updateButtons();
-      });content.append(del);
-    }
     const hint=document.createElement('div');hint.className='w-100 small text-secondary';
     hint.textContent=activeDetailsTool==='Line'?'Drag to draw a line in any direction. Drag either circular endpoint to resize or rotate around the other endpoint; drag the line to move.':'Drag on the page to draw a '+activeDetailsTool.toLowerCase()+'. Drag to move; drag the blue handles to resize.';
     content.append(hint);
@@ -1288,6 +1267,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         rotate.title='Drag to rotate '+item.type.toLowerCase();rotate.innerHTML='<i class="bi bi-arrow-clockwise text-primary" style="font-size:12px;pointer-events:none"></i>';
         box.append(rotate);
       }
+      if(item.id===selectedShapeId&&item.type===activeDetailsTool)appendObjectDeleteButton(box,item.type,()=>{recordPageEdit(currentPage());currentPage().shapes=currentPage().shapes.filter(v=>v.id!==item.id);selectedShapeId=null;renderShapeOptions();renderShapes();updateButtons();},item.type==='Line'?0:-(Math.max(0,Number(item.strokeWidth)||0)+2));
       shapeLayer.append(box);
     }
   }
@@ -1450,12 +1430,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       });
       transformGroup.append(flipH,flipV);
       content.append(transformGroup);
-      if(obj) {
-      const del=document.createElement('button');del.type='button';del.className='btn btn-sm btn-outline-danger ms-auto';
-      del.innerHTML='<i class="bi bi-trash me-1"></i>Delete Image';
-      del.addEventListener('click',()=>{if(obj) recordPageEdit(currentPage());currentPage().images=currentPage().images.filter(i=>i.id!==selectedImageId);selectedImageId=null;renderImageOptions();renderImages();updateButtons();});
-      content.append(del);
-      }
     }
     const hint=document.createElement('span');hint.className='small text-secondary w-100';
     hint.textContent='Choose an image, then click the page to place it. Drag to move, resize, or rotate using the handle above the image.';
@@ -1508,6 +1482,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         rotateHandle.title='Drag to rotate image';rotateHandle.innerHTML='<i class="bi bi-arrow-clockwise text-primary" style="font-size:12px"></i>';
         box.append(rotateHandle);
       }
+      if(obj.id===selectedImageId)appendObjectDeleteButton(box,'Image',()=>{recordPageEdit(currentPage());currentPage().images=currentPage().images.filter(v=>v.id!==obj.id);selectedImageId=null;renderImageOptions();renderImages();updateButtons();});
       imageLayer.append(box);
     }
   }
