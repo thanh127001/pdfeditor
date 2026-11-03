@@ -82,6 +82,14 @@ export const PdfEngine = (() => {
           ? target : {width:target.height,height:target.width};
         exportedPage.scaleContent(physical.width / original.width, physical.height / original.height);
         exportedPage.setSize(physical.width, physical.height);
+        // Imported PDFs may define an explicit CropBox (or other page boxes).
+        // PDF viewers use CropBox for the visible/exported page size, so update
+        // it as well; setSize alone may leave the original CropBox unchanged.
+        exportedPage.setMediaBox(0, 0, physical.width, physical.height);
+        exportedPage.setCropBox(0, 0, physical.width, physical.height);
+        exportedPage.setBleedBox(0, 0, physical.width, physical.height);
+        exportedPage.setTrimBox(0, 0, physical.width, physical.height);
+        exportedPage.setArtBox(0, 0, physical.width, physical.height);
       }
       if (overlays[exportIndex]) {
         const png = await output.embedPng(overlays[exportIndex]);
