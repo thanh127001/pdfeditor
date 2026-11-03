@@ -1088,8 +1088,11 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       if(selectedTextId){selectText(null);return;}
       const page=currentPage(); if(!page)return;
       const p=textPoint(e); recordPageEdit(page);
-      const t={id:`text-${++textCounter}`,x:Math.min(p.x,65),y:Math.min(p.y,90),
-        width:35,height:10,content:'Text',...textDefaults};
+      const bounds=textLayer.getBoundingClientRect();
+      const width=Math.min(100,200/Math.max(1,bounds.width)*100);
+      const height=Math.min(100,100/Math.max(1,bounds.height)*100);
+      const t={id:`text-${++textCounter}`,x:Math.min(p.x,100-width),y:Math.min(p.y,100-height),
+        width,height,content:'Text',...textDefaults};
       (page.texts ||= []).push(t); selectText(t.id); updateButtons();
       const field=textLayer.querySelector(`[data-text-id="${t.id}"] textarea`);
       if(field){field.focus();field.select();}
