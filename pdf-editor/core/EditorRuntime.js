@@ -730,13 +730,18 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const output = document.createElement('span');
       output.className = 'small text-body-secondary text-nowrap text-start flex-shrink-0';
       if (type === 'range') { output.style.width = '5ch'; output.style.fontVariantNumeric = 'tabular-nums'; }
-      output.textContent = type === 'range' ? `${value}${id === 'highlightHeight' ? '%' : '%'}` : '';
+      const isHeight=id==='highlightHeight';
+      const pageHeight=Math.max(1,$('highlightLayer').getBoundingClientRect().height);
+      if(isHeight){input.min='1';input.max='200';input.step='1';input.value=String(Math.round(value*pageHeight/100));}
+      output.textContent=type==='range' ? (isHeight ? input.value+'px' : value+'%') : '';
       let saved = false;
       input.addEventListener('input', () => {
         if (selectedObject && !saved) { recordPageEdit(currentPage()); saved = true; }
         const key = id === 'highlightHeight' ? 'height' : id === 'highlightColor' ? 'color' : 'opacity';
-        (selectedObject || highlightDefaults)[key] = type === 'range' ? Number(input.value) : input.value;
-        if (type === 'range') output.textContent = `${input.value}%`;
+        (selectedObject || highlightDefaults)[key] = isHeight
+          ? Number(input.value)/pageHeight*100
+          : type === 'range' ? Number(input.value) : input.value;
+        if (type === 'range') output.textContent = input.value+(isHeight?'px':'%');
         renderHighlights(); updateButtons();
       });
       group.append(label, input, output); content.append(group);
