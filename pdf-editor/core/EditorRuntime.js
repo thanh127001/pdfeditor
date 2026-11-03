@@ -775,7 +775,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   function appendObjectDeleteButton(box,label,onDelete,offset=0){
     const b=document.createElement('button');b.type='button';
     b.className='position-absolute d-flex align-items-center justify-content-center bg-white border border-danger rounded-circle text-danger';
-    b.style.cssText='width:24px;height:24px;top:'+(-offset)+'px;right:'+(-offset-30)+'px;z-index:20;cursor:pointer;touch-action:none;padding:0;pointer-events:auto';
+    b.style.cssText='width:24px;height:24px;top:50%;left:calc(100% + 18px);transform:translateY(-50%);z-index:20;cursor:pointer;touch-action:none;padding:0;pointer-events:auto';
     b.title='Delete '+label;b.setAttribute('aria-label','Delete '+label);
     b.innerHTML='<i class="bi bi-trash" style="font-size:13px;pointer-events:none"></i>';
     for(const name of ['pointerdown','mousedown','touchstart','dblclick'])b.addEventListener(name,e=>e.stopPropagation());
@@ -1374,21 +1374,19 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       if(item.id===selectedShapeId&&item.type===activeDetailsTool){
         const deleteShape=()=>{recordPageEdit(currentPage());currentPage().shapes=currentPage().shapes.filter(v=>v.id!==item.id);selectedShapeId=null;renderShapeOptions();renderShapes();updateButtons();};
         if(item.type==='Line'){
-          // Anchor the delete icon beyond the line's right endpoint, following its angle.
-          const endX=item.reverseX?0:Math.max(1,shapeLayer.clientWidth*item.width/100);
-          const endY=item.reverseY?0:Math.max(1,shapeLayer.clientHeight*item.height/100);
-          const startX=item.reverseX?Math.max(1,shapeLayer.clientWidth*item.width/100):0;
-          const startY=item.reverseY?Math.max(1,shapeLayer.clientHeight*item.height/100):0;
-          const angle=Math.atan2(endY-startY,endX-startX);
+          // Keep the same right-center anchor as every other object.
+          // Rotate the offset with the line's direction, without changing its geometry.
+          const width=shapeLayer.clientWidth*item.width/100;
+          const height=shapeLayer.clientHeight*item.height/100;
+          const angle=Math.atan2((item.reverseX===item.reverseY?1:-1)*height,width)*180/Math.PI;
           const anchor=document.createElement('div');
           anchor.className='position-absolute';
-          anchor.style.left=(item.reverseX?'0':'100%');
-          anchor.style.top=item.height===0?'50%':(item.reverseY?'0':'100%');
-          anchor.style.width='0';anchor.style.height='0';
-          anchor.style.transform='translate('+Math.cos(angle)*30+'px,'+Math.sin(angle)*30+'px)';
+          anchor.style.cssText='left:100%;top:50%;width:0;height:0;transform:rotate('+angle+'deg)';
           appendObjectDeleteButton(anchor,'Line',deleteShape);
           const button=anchor.querySelector('button');
-          button.style.top='-12px';button.style.left='-12px';button.style.right='auto';
+          button.style.left='18px';
+          button.style.top='-12px';
+          button.style.transform='none';
           box.append(anchor);
         }else appendObjectDeleteButton(box,item.type,deleteShape,Math.max(0,Number(item.strokeWidth)||0));
       }
