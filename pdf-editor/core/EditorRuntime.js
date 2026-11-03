@@ -87,11 +87,11 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const zoomValue = $('detailsZoom').value;
       const availableWidth = Math.max(120, container.clientWidth - 32);
       const availableHeight = Math.max(200, window.innerHeight - $('pageDetailsToolbar').getBoundingClientRect().bottom - 80);
-      // Default is full width (100%); Custom scales relative to that width.
+      // Default fills the available width; Fit keeps the entire page visible.
       const fullWidthScale = availableWidth / size.width;
       const scale = zoomValue === 'fit'
         ? Math.min(fullWidthScale, availableHeight / size.height)
-        : zoomValue === 'custom' ? fullWidthScale * (Number($('zoomCustomRange').value) / 100) : fullWidthScale;
+        : fullWidthScale;
       const width = Math.max(1, Math.round(size.width * scale));
       const height = Math.max(1, Math.round(size.height * scale));
       // Render into an offscreen canvas first so asynchronous navigation cannot overwrite the visible page.
@@ -1738,23 +1738,13 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     $('pageListToolbar').style.top = `${height}px`;
     $('pageDetailsToolbar').style.top = `${height}px`;
   }
-  const zoomChecks = [...document.querySelectorAll('[data-zoom-value]')];
-  const zoomRange = $('zoomCustomRange');
-  function updateZoomControls(value) {
-    $('detailsZoom').value = value;
-    zoomChecks.forEach(input => { input.checked = input.dataset.zoomValue === value; });
-    zoomRange.disabled = value !== 'custom';
-    $('detailsZoomButton').textContent = `Zoom: ${value === 'custom' ? 'Custom (' + zoomRange.value + '%)' : value === 'fit' ? 'Fit' : 'Default'}`;
-    $('detailsZoom').dispatchEvent(new Event('change', { bubbles: true }));
-  }
-  zoomChecks.forEach(input => input.addEventListener('change', () => {
-    // The three checkboxes represent exclusive zoom modes; one must stay selected.
-    updateZoomControls(input.checked ? input.dataset.zoomValue : $('detailsZoom').value);
+  document.querySelectorAll('[data-zoom-value]').forEach(button => button.addEventListener('click', () => {
+    const zoom = $('detailsZoom');
+    zoom.value = button.dataset.zoomValue;
+    $('detailsZoomButton').textContent = `Zoom: ${button.textContent.trim()}`;
+    document.querySelectorAll('[data-zoom-value]').forEach(item => item.classList.toggle('active', item === button));
+    zoom.dispatchEvent(new Event('change', { bubbles: true }));
   }));
-  zoomRange.addEventListener('input', () => {
-    $('zoomCustomValue').textContent = `${zoomRange.value}%`;
-    if ($('detailsZoom').value === 'custom') updateZoomControls('custom');
-  });
   // Keep the select in the options row; switching tools must not discard it.
   let pageSizeSelectionToken = 0;
   async function syncPageSizeSelection() {
