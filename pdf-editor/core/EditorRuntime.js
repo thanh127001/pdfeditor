@@ -414,7 +414,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const current = new Map(pages.map(p => [p.id, p]));
     pages = prev.pages.map(p => {
       const live = current.get(p.id);
-      return live ? { ...p, rotation: live.rotation, demoNotes: live.demoNotes } : { ...p };
+      return live ? { ...p, rotation: live.rotation, pageSize: live.pageSize, demoNotes: live.demoNotes } : { ...p };
     });
     const affected = (prev.affectedIds || []).filter(id => indexOf(id) >= 0);
     const fallback = (prev.selected || []).filter(id => indexOf(id) >= 0);
