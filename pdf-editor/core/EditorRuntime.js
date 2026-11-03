@@ -245,6 +245,17 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     }
   }
   function endDrag() { draggingIds = null; dropIndex = null; stopScroll(); clearDropMarkers(); $('pages').querySelectorAll('.page-card.opacity-50').forEach(card => card.classList.remove('opacity-50')); setTimeout(() => { suppressClickAfterDrag = false; }, 0); }
+  // ISO A-series classification with a 1 mm tolerance for rounded PDF dimensions.
+  function pageSizeLabel(size) {
+    const mm = 25.4 / 72;
+    const width = Math.min(size.width, size.height) * mm;
+    const height = Math.max(size.width, size.height) * mm;
+    const formats = [
+      ['A5', 148, 210], ['A4', 210, 297], ['A3', 297, 420],
+      ['A2', 420, 594], ['A1', 594, 841], ['A0', 841, 1189]
+    ];
+    return formats.find(([, w, h]) => Math.abs(width - w) <= 1 && Math.abs(height - h) <= 1)?.[0] || 'C';
+  }
   function renderList() {
     // Preserve the user's current working position across structural grid updates.
     const grid = $('pages');
@@ -279,11 +290,22 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       details.style.setProperty('--bs-btn-hover-bg', 'var(--bs-btn-bg)');
       details.style.setProperty('--bs-btn-hover-border-color', 'var(--bs-btn-border-color)');
       details.addEventListener('click', e => { e.stopPropagation(); openDetails(item.id); });
+      const sizeLabel = document.createElement('div');
+      sizeLabel.className = 'position-absolute top-0 start-0 m-2 px-2 py-1 small text-body-secondary bg-white bg-opacity-75 rounded';
+      sizeLabel.textContent = '…';
+      sizeLabel.title = 'Page size';
+      void PdfEngine.getPageSize(item).then(size => {
+        if (version !== renderVersion || !sizeLabel.isConnected) return;
+        sizeLabel.textContent = pageSizeLabel(size);
+        sizeLabel.title = `Page size: ${size.width.toFixed(2)} × ${size.height.toFixed(2)} pt`;
+      }).catch(() => {
+        if (version === renderVersion && sizeLabel.isConnected) sizeLabel.textContent = 'C';
+      });
       const pageLabel = document.createElement('div');
       pageLabel.id = `pageLabel_${item.id}`;
       pageLabel.className = 'position-absolute bottom-0 start-0 m-2 px-2 py-1 small text-body-secondary bg-white bg-opacity-75 rounded';
       pageLabel.textContent = `Page ${i + 1}`;
-      actions.append(details, checkHitbox, pageLabel); card.append(thumb, actions);
+      actions.append(details, sizeLabel, checkHitbox, pageLabel); card.append(thumb, actions);
       col.append(card); grid.append(col);
       // Selection is changed on click, not pointerdown, so an unselected card can
       // be dragged without destroying the drag source by rerendering the grid.
