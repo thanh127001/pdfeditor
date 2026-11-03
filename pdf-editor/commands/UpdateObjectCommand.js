@@ -1,0 +1,1 @@
+export class UpdateObjectCommand {constructor(execute,undo){this.apply=execute;this.revert=undo;}execute(){this.apply();}undo(){this.revert();}}

@@ -1,0 +1,1 @@
+export class CoordinateService {static toPixels(percent,extent){return percent*extent/100;}static toPercent(pixels,extent){return pixels*100/extent;}}

@@ -1,0 +1,1 @@
+export class PdfDocument {constructor(pages=[]){this.pages=pages;}}

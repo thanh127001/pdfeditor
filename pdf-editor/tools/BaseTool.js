@@ -1,0 +1,1 @@
+export class BaseTool {constructor(name){this.name=name;}activate(){}deactivate(){}pointerDown(){}pointerMove(){}pointerUp(){}}

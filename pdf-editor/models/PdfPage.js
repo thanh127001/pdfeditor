@@ -1,0 +1,1 @@
+export class PdfPage {constructor(properties={}){Object.assign(this,{id:crypto.randomUUID(),rotation:0,highlights:[],texts:[],images:[],shapes:[]},properties);}}
