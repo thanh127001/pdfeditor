@@ -830,7 +830,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       selectedHighlightId = h.id;
       mode = 'create';
     }
-    highlightGesture = { mode, id: h.id, pageId: page.id, start: pt, original: {...h}, recorded: mode === 'create' };
+    highlightGesture = { mode, id: h.id, pageId: page.id, start: pt, original: {...h}, recorded: mode === 'create', moved:false };
     highlightLayer.setPointerCapture(e.pointerId);
     e.preventDefault(); renderHighlightOptions(); renderHighlights();
   });
@@ -842,6 +842,10 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const dx = pt.x-g.start.x, dy = pt.y-g.start.y;
     if (!g.recorded && (Math.abs(dx)>0.1 || Math.abs(dy)>0.1)) {
       recordPageEdit(currentPage()); g.recorded = true;
+    }
+    if(g.mode==='create'){
+      const r=highlightLayer.getBoundingClientRect();
+      if(Math.hypot(dx*r.width/100,dy*r.height/100)>3)g.moved=true;
     }
     if (g.mode === 'create') {
       // The pointer-down position is the fixed first endpoint; the cursor
@@ -888,8 +892,19 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     }
     renderHighlights(); updateButtons();
   });
+  const CLICK_CREATE_SIZE_PX=100;
+  function clickCreateDimensions(layer,x,y){
+    const r=layer.getBoundingClientRect();
+    return {width:Math.min(100-x,10000/Math.max(1,r.width)),height:Math.min(100-y,10000/Math.max(1,r.height))};
+  }
   function endHighlightGesture(e) {
     if (!highlightGesture) return;
+    const g=highlightGesture;
+    if(e.type==='pointerup'&&g.mode==='create'&&!g.moved){
+      const h=(currentPage()?.highlights||[]).find(v=>v.id===g.id);
+      if(h){const d=clickCreateDimensions(highlightLayer,g.start.x,g.start.y);
+        h.x=g.start.x;h.y=g.start.y;h.width=d.width;h.height=d.height;h.angle=0;}
+    }
     highlightGesture = null;
     if (highlightLayer.hasPointerCapture(e.pointerId)) highlightLayer.releasePointerCapture(e.pointerId);
     renderHighlights();
@@ -1295,7 +1310,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const bounds=hit?.getBoundingClientRect();
     const centerX=bounds?bounds.left+bounds.width/2:0,centerY=bounds?bounds.top+bounds.height/2:0;
     shapeGesture={id:item.id,pageId:page.id,mode,start:p,original:{...item},saved:mode==='create',
-      centerX,centerY,startAngle:Math.atan2(e.clientY-centerY,e.clientX-centerX)*180/Math.PI};
+      centerX,centerY,startAngle:Math.atan2(e.clientY-centerY,e.clientX-centerX)*180/Math.PI,moved:false};
     shapeLayer.setPointerCapture(e.pointerId);e.preventDefault();
     renderShapeOptions();renderShapes();updateButtons();
   });
@@ -1313,6 +1328,8 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       renderShapes();updateButtons();return;
     }
     if(g.mode==='create'){
+      const r=shapeLayer.getBoundingClientRect();
+      if(Math.hypot(dx*r.width/100,dy*r.height/100)>3)g.moved=true;
       item.x=Math.min(g.start.x,p.x);item.y=Math.min(g.start.y,p.y);
       item.width=Math.max(.2,Math.abs(p.x-g.start.x));item.height=Math.max(.2,Math.abs(p.y-g.start.y));
       if((item.type==='Rectangle'&&item.square)||(item.type==='Ellipse'&&item.circle)){
@@ -1360,7 +1377,15 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     renderShapes();updateButtons();
   });
   function finishShape(e){
-    if(!shapeGesture)return;shapeGesture=null;
+    if(!shapeGesture)return;
+    const g=shapeGesture;
+    if(e.type==='pointerup'&&g.mode==='create'&&!g.moved){
+      const item=(currentPage()?.shapes||[]).find(v=>v.id===g.id);
+      if(item){const d=clickCreateDimensions(shapeLayer,g.start.x,g.start.y);
+        item.x=g.start.x;item.y=g.start.y;item.width=d.width;item.height=d.height;
+        item.reverseX=false;item.reverseY=false;}
+    }
+    shapeGesture=null;
     if(shapeLayer.hasPointerCapture(e.pointerId))shapeLayer.releasePointerCapture(e.pointerId);
     renderShapeOptions();renderShapes();
   }
