@@ -1293,18 +1293,18 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       // Other shape types remain visible but cannot be selected or edited by this tool.
       box.style.pointerEvents = item.type === activeDetailsTool ? 'auto' : 'none';
       box.style.left=item.x+'%';box.style.top=item.y+'%';
-      box.style.width=Math.max(.2,item.width)+'%';box.style.height=item.type==='Line'&&item.height===0?'0px':Math.max(.2,item.height)+'%';
+      box.style.width=item.type==='Line'&&item.width===0?'1px':Math.max(.2,item.width)+'%';box.style.height=item.type==='Line'&&item.height===0?'1px':Math.max(.2,item.height)+'%';
       box.style.cursor='move';box.style.touchAction='none';
       if(item.type==='Rectangle'||item.type==='Ellipse')box.style.transform=`rotate(${item.angle||0}deg)`;
       const svg=document.createElementNS(NS,'svg');
       svg.setAttribute('viewBox','0 0 100 100');svg.setAttribute('preserveAspectRatio','none');
-      svg.style.width='100%';svg.style.height=item.type==='Line'&&item.height===0?'1px':'100%';svg.style.display='block';svg.style.overflow='visible';box.style.overflow='visible';
+      svg.style.width='100%';svg.style.height='100%';svg.style.display='block';svg.style.overflow='visible';box.style.overflow='visible';
       let figure;
       if(item.type==='Line') {
         figure=document.createElementNS(NS,'line');
-        figure.setAttribute('x1',item.reverseX?'100':'0');
+        figure.setAttribute('x1',item.width===0?'50':item.reverseX?'100':'0');
         figure.setAttribute('y1',item.height===0?'50':item.reverseY?'100':'0');
-        figure.setAttribute('x2',item.reverseX?'0':'100');
+        figure.setAttribute('x2',item.width===0?'50':item.reverseX?'0':'100');
         figure.setAttribute('y2',item.height===0?'50':item.reverseY?'0':'100');
       } else if(item.type==='Rectangle') {
         figure=document.createElementNS(NS,'rect');
@@ -1345,7 +1345,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       } else svg.append(figure);
       box.append(svg);
       if(item.id===selectedShapeId && item.type===activeDetailsTool) {
-        box.style.outline='1px dashed #0d6efd';
+        if(item.type!=='Line')box.style.outline='1px dashed #0d6efd';
         if(item.type==='Rectangle'||item.type==='Ellipse') box.style.outlineOffset=Math.max(0,Number(item.strokeWidth)||0)+'px';
         for(const corner of (item.type==='Line' ? ['line-start','line-end'] : ['nw','ne','sw','se'])) {
           const handle=document.createElement('div');handle.dataset.shapeHandle=corner;
@@ -1353,8 +1353,8 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
           handle.style.width='12px';handle.style.height='12px';
           if(item.type==='Line') {
             const atStart=corner==='line-start';
-            handle.style[atStart?(item.reverseY?'bottom':'top'):(item.reverseY?'top':'bottom')]='-6px';
-            handle.style[atStart?(item.reverseX?'right':'left'):(item.reverseX?'left':'right')]='-6px';
+            handle.style.top=item.height===0?'calc(50% - 6px)':atStart?(item.reverseY?'calc(100% - 6px)':'-6px'):(item.reverseY?'-6px':'calc(100% - 6px)');
+            handle.style.left=item.width===0?'calc(50% - 6px)':atStart?(item.reverseX?'calc(100% - 6px)':'-6px'):(item.reverseX?'-6px':'calc(100% - 6px)');
             handle.style.cursor='crosshair';
           } else {
             styleObjectCornerHandle(handle,corner,Math.max(0,Number(item.strokeWidth)||0));
@@ -1416,7 +1416,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const r=shapeLayer.getBoundingClientRect();
       if(Math.hypot(dx*r.width/100,dy*r.height/100)>3)g.moved=true;
       item.x=Math.min(g.start.x,p.x);item.y=Math.min(g.start.y,p.y);
-      item.width=Math.max(.2,Math.abs(p.x-g.start.x));item.height=Math.max(.2,Math.abs(p.y-g.start.y));
+      item.width=item.type==='Line'?Math.abs(p.x-g.start.x):Math.max(.2,Math.abs(p.x-g.start.x));item.height=item.type==='Line'?Math.abs(p.y-g.start.y):Math.max(.2,Math.abs(p.y-g.start.y));
       if((item.type==='Rectangle'&&item.square)||(item.type==='Ellipse'&&item.circle)){
         const r=shapeLayer.getBoundingClientRect(),factor=r.width/Math.max(1,r.height);
         item.height=Math.max(.2,Math.min(100-item.y,item.width*factor));
@@ -1436,7 +1436,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const ex=g.mode==='line-end'?clamp(finishX+dx):finishX;
       const ey=g.mode==='line-end'?clamp(finishY+dy):finishY;
       item.x=Math.min(sx,ex);item.y=Math.min(sy,ey);
-      item.width=Math.max(.2,Math.abs(ex-sx));item.height=Math.max(.2,Math.abs(ey-sy));
+      item.width=Math.abs(ex-sx);item.height=Math.abs(ey-sy);
       item.reverseX=ex<sx;item.reverseY=ey<sy;
     }else{
       const o=g.original,left=g.mode.includes('w')?o.x+dx:o.x;
