@@ -518,19 +518,28 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         ctx.fillStyle=t.color||'#212529';ctx.font=`${fontPx}px ${t.font||'Arial'}`;
         ctx.textBaseline='top';
         const lineHeight=fontPx*1.25,padding=4*W/600;
-        let yy=y+padding;
-        for(const line of String(t.content||'').split('\n')) {
+        const lines=[];
+        for(const line of String(t.content||'').split('\\n')){
           let segment='';
-          for(const word of line.split(/(\s+)/)) {
-            if(segment && ctx.measureText(segment+word).width>w-padding*2) {
-              if(yy+lineHeight>y+h)break;
-              ctx.fillText(segment,x+padding,yy);yy+=lineHeight;segment='';
+          for(const word of line.split(/(\\s+)/)){
+            if(segment&&ctx.measureText(segment+word).width>w-padding*2){
+              lines.push(segment);segment='';
             }
             segment+=word;
           }
-          if(yy+lineHeight>y+h)break;
-          ctx.fillText(segment,x+padding,yy);yy+=lineHeight;
+          lines.push(segment);
         }
+        const available=Math.max(0,h-padding*2);
+        const blockHeight=lines.length*lineHeight;
+        const spare=Math.max(0,available-blockHeight);
+        let yy=y+padding+(t.alignV==='middle'?spare/2:t.alignV==='bottom'?spare:0);
+        ctx.textAlign=t.alignH||'left';
+        const xx=t.alignH==='center'?x+w/2:t.alignH==='right'?x+w-padding:x+padding;
+        for(const line of lines){
+          if(yy+lineHeight>y+h)break;
+          ctx.fillText(line,xx,yy);yy+=lineHeight;
+        }
+        ctx.textAlign='left';
       });
     }
     for(const i of page.images||[]) {
