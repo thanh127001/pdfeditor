@@ -87,13 +87,11 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const zoomValue = $('detailsZoom').value;
       const availableWidth = Math.max(120, container.clientWidth - 32);
       const availableHeight = Math.max(200, window.innerHeight - $('pageDetailsToolbar').getBoundingClientRect().bottom - 80);
-      // Default uses portrait A4 as the fixed reference, regardless of the page's size.
-      // Full Width and Fit adapt to the current page and viewport.
-      const a4ReferenceScale = availableWidth / 595.28;
+      // Default fills the available width; Fit keeps the entire page visible.
       const fullWidthScale = availableWidth / size.width;
       const scale = zoomValue === 'fit'
         ? Math.min(fullWidthScale, availableHeight / size.height)
-        : zoomValue === 'width' ? fullWidthScale : a4ReferenceScale;
+        : fullWidthScale;
       const width = Math.max(1, Math.round(size.width * scale));
       const height = Math.max(1, Math.round(size.height * scale));
       // Render into an offscreen canvas first so asynchronous navigation cannot overwrite the visible page.
@@ -1743,7 +1741,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   document.querySelectorAll('[data-zoom-value]').forEach(button => button.addEventListener('click', () => {
     const zoom = $('detailsZoom');
     zoom.value = button.dataset.zoomValue;
-    $('detailsZoomButton').textContent = button.textContent.trim();
+    $('detailsZoomButton').textContent = `Zoom: ${button.textContent.trim()}`;
     document.querySelectorAll('[data-zoom-value]').forEach(item => item.classList.toggle('active', item === button));
     zoom.dispatchEvent(new Event('change', { bubbles: true }));
   }));
