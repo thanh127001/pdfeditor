@@ -12,7 +12,13 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   let selectedTextId = null, textCounter = 0, textGesture = null;
   let selectedImageId = null, imageCounter = 0, imageGesture = null, pendingImage = null;
   let selectedShapeId = null, shapeCounter = 0, shapeGesture = null;
-  const shapeDefaults = { stroke: "#0d6efd", strokeWidth: 2, opacity: 100, fill: "#ffffff", fillOpacity: 0, square: false, circle: false };
+  const initialShapeDefaults = { stroke: "#0d6efd", strokeWidth: 2, opacity: 100, fill: "#ffffff", fillOpacity: 0, square: false, circle: false };
+  const shapeDefaultsByTool = {
+    Line: {...initialShapeDefaults},
+    Rectangle: {...initialShapeDefaults},
+    Ellipse: {...initialShapeDefaults}
+  };
+  const currentShapeDefaults = () => shapeDefaultsByTool[activeDetailsTool];
   const imageDefaults = thisEditor.toolSettings.get('Image');
   const textDefaults = thisEditor.toolSettings.get('Text');
   const highlightDefaults = thisEditor.toolSettings.get('Highlight');
@@ -1148,7 +1154,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   function renderShapeOptions() {
     if (!shapeTools.includes(activeDetailsTool)) return;
     const content = $('pageDetailsToolOptionsContent'); content.replaceChildren();
-    const obj = currentShape(), options = obj || shapeDefaults;
+    const obj = currentShape(), options = obj || currentShapeDefaults();
     function option(label, type, key, min, max, step) {
       const group = document.createElement('div'); group.className='d-flex align-items-center gap-2';
       const name = document.createElement('label'); name.className='form-label small mb-0 text-nowrap';
@@ -1162,7 +1168,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       let saved=false;
       input.addEventListener('input',()=>{
         if(obj&&!saved){recordPageEdit(currentPage());saved=true;}
-        (obj||shapeDefaults)[key]=type==='range'?Number(input.value):input.value;
+        (obj||currentShapeDefaults())[key]=type==='range'?Number(input.value):input.value;
         if(type==='range')output.textContent=input.value+(key==='strokeWidth'?'px':'%');
         renderShapes();updateButtons();
       });
@@ -1190,7 +1196,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
             obj.height=Math.max(.2,Math.min(100-obj.y,obj.width*r.width/Math.max(1,r.height)));
           }
           renderShapes();updateButtons();
-        }else shapeDefaults[key]=input.checked;
+        }else currentShapeDefaults()[key]=input.checked;
       });
       group.append(input,label);content.append(group);
     }
@@ -1304,7 +1310,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     } else {
       recordPageEdit(page);
       item={id:'shape-'+(++shapeCounter),type:activeDetailsTool,x:p.x,y:p.y,width:.2,height:.2,
-        reverseX:false,reverseY:false,...shapeDefaults};
+        reverseX:false,reverseY:false,...currentShapeDefaults()};
       (page.shapes ||= []).push(item);selectedShapeId=item.id;mode='create';
     }
     const bounds=hit?.getBoundingClientRect();
