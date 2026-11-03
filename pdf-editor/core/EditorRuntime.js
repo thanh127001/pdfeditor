@@ -1186,7 +1186,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       if(item.type==='Rectangle'||item.type==='Ellipse')box.style.transform=`rotate(${item.angle||0}deg)`;
       const svg=document.createElementNS(NS,'svg');
       svg.setAttribute('viewBox','0 0 100 100');svg.setAttribute('preserveAspectRatio','none');
-      svg.style.width='100%';svg.style.height='100%';svg.style.display='block';
+      svg.style.width='100%';svg.style.height='100%';svg.style.display='block';svg.style.overflow='visible';
       let figure;
       if(item.type==='Line') {
         figure=document.createElementNS(NS,'line');
@@ -1209,10 +1209,32 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       figure.setAttribute('fill',item.type==='Line'?'none':item.fill);
       figure.setAttribute('fill-opacity',item.type==='Line'?0:item.fillOpacity/100);
       figure.setAttribute('vector-effect','non-scaling-stroke');
-      figure.setAttribute('stroke-width',Math.max(0,item.strokeWidth));
-      svg.append(figure);box.append(svg);
+      figure.setAttribute('stroke-width',Math.max(0,item.strokeWidth)*(item.type==='Line'?1:2));
+      if(item.type!=='Line') {
+        // Paint the entire stroke behind the fill: only the outward half remains.
+        figure.setAttribute('paint-order','stroke fill');
+        // Mask the inward half even when the fill is transparent.
+        const mask=document.createElementNS(NS,'mask');
+        const maskId='shape-outer-'+item.id.replace(/[^a-zA-Z0-9_-]/g,'_');
+        mask.id=maskId;mask.setAttribute('maskUnits','userSpaceOnUse');
+        mask.setAttribute('x','-100');mask.setAttribute('y','-100');
+        mask.setAttribute('width','300');mask.setAttribute('height','300');
+        const white=document.createElementNS(NS,'rect');
+        white.setAttribute('x','-100');white.setAttribute('y','-100');
+        white.setAttribute('width','300');white.setAttribute('height','300');white.setAttribute('fill','white');
+        const cut=figure.cloneNode(false);
+        cut.removeAttribute('stroke');cut.setAttribute('fill','black');cut.removeAttribute('fill-opacity');
+        mask.append(white,cut);
+        const defs=document.createElementNS(NS,'defs');defs.append(mask);svg.append(defs);
+        const outside=figure.cloneNode(false);
+        outside.setAttribute('fill','none');outside.setAttribute('mask','url(#'+maskId+')');
+        const fill=figure.cloneNode(false);fill.setAttribute('stroke','none');
+        svg.append(outside,fill);
+      } else svg.append(figure);
+      box.append(svg);
       if(item.id===selectedShapeId && item.type===activeDetailsTool) {
         box.style.outline='1px dashed #0d6efd';
+        if(item.type==='Rectangle'||item.type==='Ellipse') box.style.outlineOffset=Math.max(0,Number(item.strokeWidth)||0)+'px';
         for(const corner of (item.type==='Line' ? ['line-start','line-end'] : ['nw','ne','sw','se'])) {
           const handle=document.createElement('div');handle.dataset.shapeHandle=corner;
           handle.className=item.type==='Line'?'position-absolute bg-primary border border-white rounded-circle':'position-absolute bg-primary';
