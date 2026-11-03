@@ -57,6 +57,14 @@
           <span id="pagePosition" class="small text-secondary" aria-live="polite">Page 1 / 1</span>
           <button id="previous" type="button" class="btn btn-primary" aria-label="Previous page"><i class="bi bi-chevron-left"></i></button>
           <button id="next" type="button" class="btn btn-primary" aria-label="Next page"><i class="bi bi-chevron-right"></i></button>
+          <div class="d-flex align-items-center gap-2">
+            <label for="detailsPageSize" class="small text-secondary text-nowrap">Page Size</label>
+            <select id="detailsPageSize" class="form-select form-select-sm" aria-label="Page Size">
+              <option value="original">Original Size</option>
+              <option value="A5">A5</option><option value="A4">A4</option><option value="A3">A3</option>
+              <option value="A2">A2</option><option value="A1">A1</option><option value="A0">A0</option>
+            </select>
+          </div>
           <div class="dropdown">
             <button id="detailsZoomButton" type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">100%</button>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="detailsZoomButton">
