@@ -87,11 +87,11 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const zoomValue = $('detailsZoom').value;
       const availableWidth = Math.max(120, container.clientWidth - 32);
       const availableHeight = Math.max(200, window.innerHeight - $('pageDetailsToolbar').getBoundingClientRect().bottom - 80);
-      // Default fills the available width; Fit keeps the entire page visible.
+      // 100% fills the available width; other percentages scale relative to it.
       const fullWidthScale = availableWidth / size.width;
       const scale = zoomValue === 'fit'
         ? Math.min(fullWidthScale, availableHeight / size.height)
-        : fullWidthScale;
+        : fullWidthScale * (Number(zoomValue) / 100);
       const width = Math.max(1, Math.round(size.width * scale));
       const height = Math.max(1, Math.round(size.height * scale));
       // Render into an offscreen canvas first so asynchronous navigation cannot overwrite the visible page.
