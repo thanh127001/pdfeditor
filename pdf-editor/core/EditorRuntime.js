@@ -743,10 +743,19 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     hint.textContent = 'Drag horizontally on the page to highlight';
     content.append(hint);
   }
+  const OBJECT_HANDLE_SIZE=12;
+  function styleObjectCornerHandle(handle,corner,offset=0){
+    handle.style.width=OBJECT_HANDLE_SIZE+'px';handle.style.height=OBJECT_HANDLE_SIZE+'px';
+    handle.style.left=corner.includes('w')?(-offset)+'px':'calc(100% + '+offset+'px)';
+    handle.style.top=corner.includes('n')?(-offset)+'px':'calc(100% + '+offset+'px)';
+    handle.style.transform='translate(-50%, -50%)';
+    handle.style.zIndex='5';handle.style.touchAction='none';
+    handle.style.cursor=(corner==='nw'||corner==='se')?'nwse-resize':'nesw-resize';
+  }
   function appendObjectDeleteButton(box,label,onDelete,offset=0){
     const b=document.createElement('button');b.type='button';
     b.className='position-absolute d-flex align-items-center justify-content-center bg-white border border-danger rounded-circle text-danger';
-    b.style.cssText='width:24px;height:24px;top:-30px;right:'+offset+'px;z-index:20;cursor:pointer;touch-action:none;padding:0;pointer-events:auto';
+    b.style.cssText='width:24px;height:24px;top:'+(-offset-30)+'px;right:'+(-offset-2)+'px;z-index:20;cursor:pointer;touch-action:none;padding:0;pointer-events:auto';
     b.title='Delete '+label;b.setAttribute('aria-label','Delete '+label);
     b.innerHTML='<i class="bi bi-trash" style="font-size:13px;pointer-events:none"></i>';
     for(const name of ['pointerdown','mousedown','touchstart','dblclick'])b.addEventListener(name,e=>e.stopPropagation());
@@ -764,14 +773,15 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       el.style.left = `${h.x}%`; el.style.top = `${h.y}%`;
       el.style.width = `${h.width}%`; el.style.height = `${h.height}%`;
       el.style.backgroundColor = h.color;
+      el.style.backgroundColor = h.color;
       el.style.opacity = `${h.opacity / 100}`;
       el.style.cursor = 'move';
       el.style.transform = `rotate(${h.angle || 0}deg)`;
       el.style.transformOrigin = 'center center';
       el.style.touchAction = 'none';
       if (h.id === selectedHighlightId) {
-        el.style.outline = '2px dashed #0d6efd';
-        el.style.outlineOffset = '1px';
+        el.style.outline = '1px dashed #0d6efd';
+        el.style.outlineOffset = '0px';
         for (const side of ['left','right']) {
           const handle = document.createElement('div');
           handle.dataset.resize = side;
@@ -979,7 +989,8 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       box.style.left=`${t.x}%`; box.style.top=`${t.y}%`;
       box.style.width=`${t.width}%`; box.style.height=`${t.height}%`;
       box.style.minWidth='35px'; box.style.minHeight='24px';
-      box.style.border=t.id===selectedTextId?'1px dashed #0d6efd':'1px solid transparent';
+      box.style.border='1px solid transparent';
+      if(t.id===selectedTextId){box.style.outline='1px dashed #0d6efd';box.style.outlineOffset='0px';}
       box.style.boxSizing='border-box';
       box.style.pointerEvents=activeDetailsTool==='Text'?'auto':'none';
       const bar=document.createElement('div');
@@ -1012,12 +1023,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
           handle.className='position-absolute bg-primary';
           handle.dataset.textResize=t.id;
           handle.dataset.corner=corner;
-          handle.style.width='12px';handle.style.height='12px';
-          handle.style.left=corner.includes('w')?'0':'100%';
-          handle.style.top=corner.includes('n')?'0':'100%';
-          handle.style.transform='translate(-50%, -50%)';
-          handle.style.zIndex='5';handle.style.touchAction='none';
-          handle.style.cursor=(corner==='nw'||corner==='se')?'nwse-resize':'nesw-resize';
+          styleObjectCornerHandle(handle,corner);
           box.append(handle);
         }
       }
@@ -1251,9 +1257,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
             handle.style[atStart?(item.reverseX?'right':'left'):(item.reverseX?'left':'right')]='-6px';
             handle.style.cursor='crosshair';
           } else {
-            handle.style[corner.includes('n')?'top':'bottom']='-6px';
-            handle.style[corner.includes('w')?'left':'right']='-6px';
-            handle.style.cursor=corner==='nw'||corner==='se'?'nwse-resize':'nesw-resize';
+            styleObjectCornerHandle(handle,corner,Math.max(0,Number(item.strokeWidth)||0)+2);
           }
           box.append(handle);
         }
@@ -1267,7 +1271,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         rotate.title='Drag to rotate '+item.type.toLowerCase();rotate.innerHTML='<i class="bi bi-arrow-clockwise text-primary" style="font-size:12px;pointer-events:none"></i>';
         box.append(rotate);
       }
-      if(item.id===selectedShapeId&&item.type===activeDetailsTool)appendObjectDeleteButton(box,item.type,()=>{recordPageEdit(currentPage());currentPage().shapes=currentPage().shapes.filter(v=>v.id!==item.id);selectedShapeId=null;renderShapeOptions();renderShapes();updateButtons();},item.type==='Line'?0:-(Math.max(0,Number(item.strokeWidth)||0)+2));
+      if(item.id===selectedShapeId&&item.type===activeDetailsTool)appendObjectDeleteButton(box,item.type,()=>{recordPageEdit(currentPage());currentPage().shapes=currentPage().shapes.filter(v=>v.id!==item.id);selectedShapeId=null;renderShapeOptions();renderShapes();updateButtons();},item.type==='Line'?0:(Math.max(0,Number(item.strokeWidth)||0)+2));
       shapeLayer.append(box);
     }
   }
@@ -1454,7 +1458,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       box.style.width=`${obj.width}%`;box.style.height=`${obj.height}%`;
       box.style.cursor='move';box.style.touchAction='none';
       box.style.pointerEvents=activeDetailsTool==='Image'?'auto':'none';
-      if(obj.id===selectedImageId){box.style.outline='2px dashed #0d6efd';box.style.outlineOffset='0px';}
+      if(obj.id===selectedImageId){box.style.outline='1px dashed #0d6efd';box.style.outlineOffset='0px';}
       const img=document.createElement('img');img.src=obj.src;img.draggable=false;img.alt='Inserted image';
       img.className='w-100 h-100';img.style.objectFit='fill';img.style.pointerEvents='none';
       img.style.transform=`rotate(${obj.angle||0}deg) scale(${obj.flipH?-1:1},${obj.flipV?-1:1})`;
