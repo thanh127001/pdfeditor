@@ -66,7 +66,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const i = indexOf(detailsId);
     if (i < 0) { setView(false); return; }
     $('pagePosition').textContent = `Page ${i + 1} / ${pages.length}`;
-    pageSizeSelect.value = pages[i].pageSize || 'original';
+    void syncPageSizeSelection();
     $('editorText').value = pages[i].demoNotes || '';
     updateButtons();
     void renderDetailsPage();
@@ -687,7 +687,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       label.htmlFor = 'detailsPageSize';
       label.textContent = 'Page Size';
       const select = pageSizeSelect;
-      select.value = currentPage()?.pageSize || 'original';
+      void syncPageSizeSelection();
       content.append(label, select);
       return;
     }
@@ -1748,11 +1748,33 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     zoom.dispatchEvent(new Event('change', { bubbles: true }));
   }));
   // Keep the select in the options row; switching tools must not discard it.
+  let pageSizeSelectionToken = 0;
+  async function syncPageSizeSelection() {
+    const token = ++pageSizeSelectionToken;
+    const page = currentPage();
+    if (!page || !isDetails()) {
+      pageSizeSelect.value = '';
+      return;
+    }
+    if (page.pageSize && page.pageSize !== 'original') {
+      pageSizeSelect.value = page.pageSize;
+      return;
+    }
+    pageSizeSelect.value = '';
+    try {
+      const size = await PdfEngine.getPageSize(page);
+      if (token !== pageSizeSelectionToken || currentPage() !== page || !isDetails()) return;
+      const detected = pageSizeLabel(size);
+      pageSizeSelect.value = detected === '?' ? 'original' : detected;
+    } catch {
+      if (token === pageSizeSelectionToken && currentPage() === page) pageSizeSelect.value = 'original';
+    }
+  }
   const pageSizeSelect = document.createElement('select');
   pageSizeSelect.id = 'detailsPageSize';
   pageSizeSelect.className = 'form-select form-select-sm w-auto';
   pageSizeSelect.setAttribute('aria-label', 'Page Size');
-  for (const [value, label] of [['original','Original Size'],['A5','A5'],['A4','A4'],['A3','A3'],['A2','A2'],['A1','A1'],['A0','A0'],['Letter','Letter']]) {
+  for (const [value, label] of [['',''],['original','Original Size'],['A5','A5'],['A4','A4'],['A3','A3'],['A2','A2'],['A1','A1'],['A0','A0'],['Letter','Letter']]) {
     const option = document.createElement('option');
     option.value = value; option.textContent = label;
     pageSizeSelect.append(option);
@@ -1760,13 +1782,14 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   $('pageDetailsToolOptionsContent').append(pageSizeSelect);
   pageSizeSelect.addEventListener('change', () => {
     const page = currentPage();
-    if (!page || busy) return;
+    if (!page || busy || !pageSizeSelect.value) return;
     const size = pageSizeSelect.value;
     if (size === (page.pageSize || 'original')) return;
     recordPageEdit(page);
     page.pageSize = size;
     updateButtons();
     void renderDetailsPage();
+    void syncPageSizeSelection();
   });
   $('detailsZoom').addEventListener('change', () => { if (isDetails()) void renderDetailsPage(); });
   window.addEventListener('resize', () => { if (isDetails()) void renderDetailsPage(); });
