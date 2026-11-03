@@ -66,11 +66,12 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const i = indexOf(detailsId);
     if (i < 0) { setView(false); return; }
     $('pagePosition').textContent = `Page ${i + 1} / ${pages.length}`;
-    $('detailsPageSize').value = pages[i].pageSize || 'original';
+    pageSizeSelect.value = pages[i].pageSize || 'original';
     $('editorText').value = pages[i].demoNotes || '';
     updateButtons();
     void renderDetailsPage();
     renderHighlightOptions();
+    if (activeDetailsTool === 'PageSize') updateDetailsToolSelection();
     if (activeDetailsTool === "Text") renderTextOptions();
     if (activeDetailsTool === "Image") renderImageOptions();
     if (["Line","Rectangle","Ellipse"].includes(activeDetailsTool)) renderShapeOptions();
@@ -86,8 +87,13 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const zoomValue = $('detailsZoom').value;
       const availableWidth = Math.max(120, container.clientWidth - 32);
       const availableHeight = Math.max(200, window.innerHeight - $('pageDetailsToolbar').getBoundingClientRect().bottom - 80);
-      const widthFitScale = availableWidth / size.width;
-      const scale = zoomValue === 'fit' ? Math.min(widthFitScale, availableHeight / size.height) : widthFitScale * Number(zoomValue);
+      // Default uses portrait A4 as the fixed reference, regardless of the page's size.
+      // Full Width and Fit adapt to the current page and viewport.
+      const a4ReferenceScale = availableWidth / 595.28;
+      const fullWidthScale = availableWidth / size.width;
+      const scale = zoomValue === 'fit'
+        ? Math.min(fullWidthScale, availableHeight / size.height)
+        : zoomValue === 'width' ? fullWidthScale : a4ReferenceScale;
       const width = Math.max(1, Math.round(size.width * scale));
       const height = Math.max(1, Math.round(size.height * scale));
       // Render into an offscreen canvas first so asynchronous navigation cannot overwrite the visible page.
@@ -650,6 +656,16 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     row.classList.toggle('d-none', !activeDetailsTool);
     const content = $('pageDetailsToolOptionsContent');
     content.replaceChildren();
+    if (activeDetailsTool === 'PageSize') {
+      const label = document.createElement('label');
+      label.className = 'form-label small mb-0 text-nowrap';
+      label.htmlFor = 'detailsPageSize';
+      label.textContent = 'Page Size';
+      const select = pageSizeSelect;
+      select.value = currentPage()?.pageSize || 'original';
+      content.append(label, select);
+      return;
+    }
     if (activeDetailsTool === 'Highlight') { renderHighlightOptions(); return; }
     if (activeDetailsTool === 'Text') { renderTextOptions(); return; }
     if (activeDetailsTool === 'Image') { renderImageOptions(); return; }
@@ -1706,10 +1722,21 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     document.querySelectorAll('[data-zoom-value]').forEach(item => item.classList.toggle('active', item === button));
     zoom.dispatchEvent(new Event('change', { bubbles: true }));
   }));
-  $('detailsPageSize').addEventListener('change', () => {
+  // Keep the select in the options row; switching tools must not discard it.
+  const pageSizeSelect = document.createElement('select');
+  pageSizeSelect.id = 'detailsPageSize';
+  pageSizeSelect.className = 'form-select form-select-sm w-auto';
+  pageSizeSelect.setAttribute('aria-label', 'Page Size');
+  for (const [value, label] of [['original','Original Size'],['A5','A5'],['A4','A4'],['A3','A3'],['A2','A2'],['A1','A1'],['A0','A0']]) {
+    const option = document.createElement('option');
+    option.value = value; option.textContent = label;
+    pageSizeSelect.append(option);
+  }
+  $('pageDetailsToolOptionsContent').append(pageSizeSelect);
+  pageSizeSelect.addEventListener('change', () => {
     const page = currentPage();
     if (!page || busy) return;
-    const size = $('detailsPageSize').value;
+    const size = pageSizeSelect.value;
     if (size === (page.pageSize || 'original')) return;
     recordPageEdit(page);
     page.pageSize = size;
