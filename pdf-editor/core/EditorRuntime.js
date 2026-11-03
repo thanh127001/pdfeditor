@@ -252,9 +252,10 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const height = Math.max(size.width, size.height) * mm;
     const formats = [
       ['A5', 148, 210], ['A4', 210, 297], ['A3', 297, 420],
-      ['A2', 420, 594], ['A1', 594, 841], ['A0', 841, 1189]
+      ['A2', 420, 594], ['A1', 594, 841], ['A0', 841, 1189],
+      ['Letter', 215.9, 279.4]
     ];
-    return formats.find(([, w, h]) => Math.abs(width - w) <= 1 && Math.abs(height - h) <= 1)?.[0] || 'C';
+    return formats.find(([, w, h]) => Math.abs(width - w) <= 1 && Math.abs(height - h) <= 1)?.[0] || '?';
   }
   function renderList() {
     // Preserve the user's current working position across structural grid updates.
@@ -299,7 +300,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         sizeLabel.textContent = pageSizeLabel(size);
         sizeLabel.title = `Page size: ${size.width.toFixed(2)} × ${size.height.toFixed(2)} pt`;
       }).catch(() => {
-        if (version === renderVersion && sizeLabel.isConnected) sizeLabel.textContent = 'C';
+        if (version === renderVersion && sizeLabel.isConnected) sizeLabel.textContent = '?';
       });
       const pageLabel = document.createElement('div');
       pageLabel.id = `pageLabel_${item.id}`;
@@ -1751,7 +1752,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   pageSizeSelect.id = 'detailsPageSize';
   pageSizeSelect.className = 'form-select form-select-sm w-auto';
   pageSizeSelect.setAttribute('aria-label', 'Page Size');
-  for (const [value, label] of [['original','Original Size'],['A5','A5'],['A4','A4'],['A3','A3'],['A2','A2'],['A1','A1'],['A0','A0']]) {
+  for (const [value, label] of [['original','Original Size'],['A5','A5'],['A4','A4'],['A3','A3'],['A2','A2'],['A1','A1'],['A0','A0'],['Letter','Letter']]) {
     const option = document.createElement('option');
     option.value = value; option.textContent = label;
     pageSizeSelect.append(option);
