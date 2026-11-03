@@ -30,7 +30,8 @@ export const PdfEngine = (() => {
     requireLibraries();
     const context = canvas.getContext('2d');
     if (!item.sourceId) {
-      canvas.width = item.rotation % 180 === 0 ? 595 : 842; canvas.height = item.rotation % 180 === 0 ? 842 : 595;
+      const size = await getPageSize(item);
+      canvas.width = Math.ceil(size.width); canvas.height = Math.ceil(size.height);
       context.fillStyle = '#fff'; context.fillRect(0, 0, canvas.width, canvas.height);
       return;
     }
@@ -38,10 +39,14 @@ export const PdfEngine = (() => {
     if (!source) throw new Error('The source PDF is unavailable.');
     const page = await source.renderDoc.getPage(item.pageIndex + 1);
     const initial = page.getViewport({ scale: 1, rotation: (page.rotate + item.rotation) % 360 });
-    const scale = Math.min(1.6, maxWidth / initial.width);
+    const target = resizedSize(item, {width:initial.width,height:initial.height});
+    const scale = Math.min(1.6, maxWidth / target.width);
     const viewport = page.getViewport({ scale, rotation: (page.rotate + item.rotation) % 360 });
-    canvas.width = Math.ceil(viewport.width); canvas.height = Math.ceil(viewport.height);
-    await page.render({ canvasContext: context, viewport }).promise;
+    canvas.width = Math.ceil(target.width * scale); canvas.height = Math.ceil(target.height * scale);
+    const renderCanvas = document.createElement('canvas');
+    renderCanvas.width = Math.ceil(viewport.width); renderCanvas.height = Math.ceil(viewport.height);
+    await page.render({ canvasContext: renderCanvas.getContext('2d'), viewport }).promise;
+    context.drawImage(renderCanvas, 0, 0, canvas.width, canvas.height);
   }
   async function exportPdf(items, overlays = []) {
     requireLibraries();
@@ -66,6 +71,18 @@ export const PdfEngine = (() => {
         output.addPage(copied);
         exportedPage = copied;
       }
+      if (paperSizes[item.pageSize]) {
+        const original = exportedPage.getSize();
+        const rotation = ((baseRotation + (item.rotation || 0)) % 360 + 360) % 360;
+        const visual = rotation % 180 === 0
+          ? {width:original.width,height:original.height}
+          : {width:original.height,height:original.width};
+        const target = resizedSize(item, visual);
+        const physical = rotation % 180 === 0
+          ? target : {width:target.height,height:target.width};
+        exportedPage.scaleContent(physical.width / original.width, physical.height / original.height);
+        exportedPage.setSize(physical.width, physical.height);
+      }
       if (overlays[exportIndex]) {
         const png = await output.embedPng(overlays[exportIndex]);
         const {width: W, height: H} = exportedPage.getSize();
@@ -87,13 +104,26 @@ export const PdfEngine = (() => {
     const old = [...sources.values()]; sources.clear();
     await Promise.allSettled(old.map(source => source.renderDoc.destroy()));
   }
+  const paperSizes = Object.freeze({
+    A5: [419.53, 595.28], A4: [595.28, 841.89],
+    A3: [841.89, 1190.55], A2: [1190.55, 1683.78],
+    A1: [1683.78, 2383.94], A0: [2383.94, 3370.39]
+  });
+  function resizedSize(item, original) {
+    const paper = paperSizes[item.pageSize];
+    if (!paper) return original;
+    const landscape = original.width > original.height;
+    return landscape
+      ? {width:paper[1], height:paper[0]}
+      : {width:paper[0], height:paper[1]};
+  }
   async function getPageSize(item) {
-    if (!item.sourceId) return item.rotation % 180 === 0 ? {width:595.28,height:841.89} : {width:841.89,height:595.28};
+    if (!item.sourceId) return resizedSize(item, item.rotation % 180 === 0 ? {width:595.28,height:841.89} : {width:841.89,height:595.28});
     const source = sources.get(item.sourceId);
     if (!source) throw new Error('The source PDF is unavailable.');
     const page = await source.renderDoc.getPage(item.pageIndex + 1);
     const viewport = page.getViewport({scale:1,rotation:(page.rotate + item.rotation)%360});
-    return {width:viewport.width,height:viewport.height};
+    return resizedSize(item, {width:viewport.width,height:viewport.height});
   }
   return Object.freeze({ importPdf, createBlankPage, renderThumbnail, getPageSize, exportPdf, reset });
 })();
