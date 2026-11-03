@@ -944,6 +944,27 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const alpha = Math.max(0, Math.min(100, Number(t.backgroundOpacity ?? 50))) / 100;
     return `rgba(${rgb.join(', ')}, ${alpha})`;
   }
+  function applyTextAlignment(field,t){
+    field.style.textAlign=t.alignH||'left';
+    field.style.boxSizing='border-box';
+    field.style.paddingTop='4px';
+    const fontSize=parseFloat(getComputedStyle(field).fontSize)||18;
+    const lineHeight=fontSize*1.25;
+    const width=Math.max(1,field.clientWidth-8);
+    const measure=document.createElement('canvas').getContext('2d');
+    measure.font=fontSize+'px '+(t.font||'Arial');
+    let lines=0;
+    for(const line of String(t.content||'').split('\\n')){
+      let segment='',count=1;
+      for(const word of line.split(/(\\s+)/)){
+        if(segment&&measure.measureText(segment+word).width>width){count++;segment='';}
+        segment+=word;
+      }
+      lines+=count;
+    }
+    const spare=Math.max(0,field.clientHeight-8-lines*lineHeight);
+    field.style.paddingTop=(4+(t.alignV==='middle'?spare/2:t.alignV==='bottom'?spare:0))+'px';
+  }
   // Update the selected text in place to preserve focus and caret position.
   function refreshTextAppearance() {
     const obj = currentText();
@@ -955,6 +976,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     field.style.backgroundColor = textBackground(obj);
     field.style.fontFamily = obj.font;
     field.style.fontSize = `${obj.size * ($('detailsPaper').clientWidth || 1) / 600}px`;
+    applyTextAlignment(field,obj);
   }
   function renderTextOptions() {
     if (activeDetailsTool !== 'Text') return;
@@ -1013,6 +1035,29 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       slider.addEventListener('change', () => { saved = false; });
       group.append(label, slider, value); content.append(group);
     }
+    {
+      const group=document.createElement('div');
+      group.className='d-flex align-items-center flex-wrap gap-2';
+      const label=document.createElement('span');label.className='small text-secondary';label.textContent='Align';
+      const buttons=document.createElement('div');buttons.className='btn-group btn-group-sm';buttons.setAttribute('role','group');buttons.setAttribute('aria-label','Text alignment');
+      const choices=[
+        ['alignH','left','text-left','Left'],['alignH','center','text-center','Center horizontally'],['alignH','right','text-right','Right'],
+        ['alignV','top','align-top','Top'],['alignV','middle','align-middle','Middle vertically'],['alignV','bottom','align-bottom','Bottom']
+      ];
+      for(const [key,value,icon,title] of choices){
+        const button=document.createElement('button');button.type='button';
+        button.className='btn '+((settings[key]||(key==='alignH'?'left':'top'))===value?'btn-primary':'btn-outline-primary');
+        button.title=title;button.setAttribute('aria-label',title);
+        button.innerHTML='<i class="bi bi-'+icon+'"></i>';
+        button.addEventListener('click',()=>{
+          if(obj)recordPageEdit(currentPage());
+          (obj||textDefaults)[key]=value;
+          refreshTextAppearance();renderTextOptions();updateButtons();
+        });
+        buttons.append(button);
+      }
+      group.append(label,buttons);content.append(group);
+    }
     const hint=document.createElement('span'); hint.className='small text-secondary w-100';
     hint.textContent='Click the page to add text, then edit or drag the text box'; content.append(hint);
   }
@@ -1042,6 +1087,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       textarea.style.color=t.color; textarea.style.backgroundColor=textBackground(t);
       textarea.style.transform=`rotate(${t.angle||0}deg)`; textarea.style.transformOrigin='center center';
       textarea.style.resize='none'; textarea.style.outline='none';
+      applyTextAlignment(textarea,t);
       textarea.style.overflow='auto'; textarea.style.pointerEvents=activeDetailsTool==='Text'?'auto':'none';
       textarea.addEventListener('pointerdown',e=>{
         e.stopPropagation();
@@ -1050,7 +1096,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       let typed=false;
       textarea.addEventListener('input',()=>{
         if (!typed) { recordPageEdit(currentPage()); typed=true; }
-        t.content=textarea.value; updateButtons();
+        t.content=textarea.value;applyTextAlignment(textarea,t); updateButtons();
       });
       textarea.addEventListener('blur',()=>{typed=false;});
       box.append(textarea,bar);
