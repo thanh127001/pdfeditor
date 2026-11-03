@@ -645,7 +645,9 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     Line: 'Line options', Rectangle: 'Rectangle options', Ellipse: 'Ellipse options'
   };
   function updateDetailsToolSelection() {
-    if(thisEditor.state.activeTool!==activeDetailsTool) thisEditor.toolManager.activate(activeDetailsTool);
+    // Page Size is a page command, not a registered drawing tool.
+    const drawingTool = activeDetailsTool === 'PageSize' ? null : activeDetailsTool;
+    if(thisEditor.state.activeTool!==drawingTool) thisEditor.toolManager.activate(drawingTool);
     document.querySelectorAll('[data-demo-tool]').forEach(button => {
       const active = button.dataset.demoTool === activeDetailsTool;
       button.classList.toggle('btn-primary', active);
