@@ -755,7 +755,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   function appendObjectDeleteButton(box,label,onDelete,offset=0){
     const b=document.createElement('button');b.type='button';
     b.className='position-absolute d-flex align-items-center justify-content-center bg-white border border-danger rounded-circle text-danger';
-    b.style.cssText='width:24px;height:24px;top:'+(-offset-30)+'px;right:'+(-offset)+'px;z-index:20;cursor:pointer;touch-action:none;padding:0;pointer-events:auto';
+    b.style.cssText='width:24px;height:24px;top:'+(-offset)+'px;right:'+(-offset-30)+'px;z-index:20;cursor:pointer;touch-action:none;padding:0;pointer-events:auto';
     b.title='Delete '+label;b.setAttribute('aria-label','Delete '+label);
     b.innerHTML='<i class="bi bi-trash" style="font-size:13px;pointer-events:none"></i>';
     for(const name of ['pointerdown','mousedown','touchstart','dblclick'])b.addEventListener(name,e=>e.stopPropagation());
