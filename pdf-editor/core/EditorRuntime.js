@@ -913,12 +913,19 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const g=highlightGesture;
     if(e.type==='pointerup'&&g.mode==='create'&&!g.moved){
       const h=(currentPage()?.highlights||[]).find(v=>v.id===g.id);
-      if(h){const d=clickCreateDimensions(highlightLayer,g.start.x,g.start.y);
-        h.x=g.start.x;h.y=g.start.y;h.width=d.width;h.height=d.height;h.angle=0;}
+      if(h){
+        const d=clickCreateDimensions(highlightLayer,g.start.x,g.start.y);
+        // Click-only Highlight uses the configured height, not the 100px shape default.
+        // Keep the same vertical centering as pointerdown and fit inside the page.
+        const height=Math.max(0.2,Math.min(100,Number(g.original.height)||Number(highlightDefaults.height)||3));
+        h.x=g.start.x;
+        h.y=Math.max(0,Math.min(100-height,g.start.y-height/2));
+        h.width=d.width;h.height=height;h.angle=0;
+      }
     }
     highlightGesture = null;
     if (highlightLayer.hasPointerCapture(e.pointerId)) highlightLayer.releasePointerCapture(e.pointerId);
-    renderHighlights();
+    renderHighlights();renderHighlightOptions();updateButtons();
   }
   highlightLayer.addEventListener('pointerup', endHighlightGesture);
   highlightLayer.addEventListener('pointercancel', endHighlightGesture);
