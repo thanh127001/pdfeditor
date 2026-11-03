@@ -59,24 +59,12 @@
           <button id="next" type="button" class="btn btn-primary" aria-label="Next page"><i class="bi bi-chevron-right"></i></button>
           <div class="dropdown">
             <button id="detailsZoomButton" type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Zoom: Default</button>
-            <div class="dropdown-menu dropdown-menu-end p-3" aria-labelledby="detailsZoomButton" style="min-width: 220px">
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" data-zoom-value="default" id="zoomDefault" checked>
-                <label class="form-check-label" for="zoomDefault">Default (100%)</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" data-zoom-value="fit" id="zoomFit">
-                <label class="form-check-label" for="zoomFit">Fit</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" data-zoom-value="custom" id="zoomCustom">
-                <label class="form-check-label" for="zoomCustom">Custom</label>
-              </div>
-              <label for="zoomCustomRange" id="zoomCustomValue" class="form-label small mt-2 mb-0">100%</label>
-              <input id="zoomCustomRange" type="range" class="form-range" min="25" max="400" step="25" value="100" disabled aria-label="Custom zoom percentage">
-            </div>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="detailsZoomButton">
+              <li><button type="button" class="dropdown-item active" data-zoom-value="default">Default</button></li>
+              <li><button type="button" class="dropdown-item" data-zoom-value="fit">Fit</button></li>
+            </ul>
             <select id="detailsZoom" class="d-none" aria-label="Page zoom" tabindex="-1">
-              <option value="default" selected>Default</option><option value="fit">Fit</option><option value="custom">Custom</option>
+              <option value="default" selected>Default</option><option value="fit">Fit</option>
             </select>
           </div>
         </div></div>
