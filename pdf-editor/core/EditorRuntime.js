@@ -1301,9 +1301,9 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       if(item.type==='Line') {
         figure=document.createElementNS(NS,'line');
         figure.setAttribute('x1',item.reverseX?'100':'0');
-        figure.setAttribute('y1',item.reverseY?'100':'0');
+        figure.setAttribute('y1',item.height===0?'50':item.reverseY?'100':'0');
         figure.setAttribute('x2',item.reverseX?'0':'100');
-        figure.setAttribute('y2',item.reverseY?'0':'100');
+        figure.setAttribute('y2',item.height===0?'50':item.reverseY?'0':'100');
       } else if(item.type==='Rectangle') {
         figure=document.createElementNS(NS,'rect');
         figure.setAttribute('x','0');figure.setAttribute('y','0');
@@ -1465,7 +1465,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     if(e.type==='pointerup'&&g.mode==='create'&&!g.moved){
       const item=(currentPage()?.shapes||[]).find(v=>v.id===g.id);
       if(item){const d=clickCreateDimensions(shapeLayer,g.start.x,g.start.y);
-        item.x=g.start.x;item.y=g.start.y;item.width=d.width;item.height=d.height;
+        item.x=g.start.x;item.y=g.start.y;item.width=d.width;item.height=item.type==='Line'?0:d.height;
         item.reverseX=false;item.reverseY=false;}
     }
     shapeGesture=null;
