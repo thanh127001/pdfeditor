@@ -115,7 +115,8 @@ export const PdfEngine = (() => {
   const paperSizes = Object.freeze({
     A5: [419.53, 595.28], A4: [595.28, 841.89],
     A3: [841.89, 1190.55], A2: [1190.55, 1683.78],
-    A1: [1683.78, 2383.94], A0: [2383.94, 3370.39]
+    A1: [1683.78, 2383.94], A0: [2383.94, 3370.39],
+    Letter: [612, 792]
   });
   function resizedSize(item, original) {
     const paper = paperSizes[item.pageSize];
