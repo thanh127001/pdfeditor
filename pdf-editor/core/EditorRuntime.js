@@ -1089,13 +1089,15 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       bar.style.height='10px'; bar.style.cursor='move'; bar.style.zIndex='2';
       bar.dataset.textDrag=t.id;
       const textarea=document.createElement('textarea');
-      textarea.className='w-100 h-100 border-0 rounded-0 p-1';
+      textarea.className='w-100 h-100 border-0 rounded-0';
+      textarea.style.padding='4px';
       textarea.value=t.content;
       textarea.setAttribute('aria-label','Edit PDF page text');
       textarea.style.fontFamily=t.font; textarea.style.fontSize=`${t.size * paperWidth/600}px`;
       textarea.style.color=t.color; textarea.style.backgroundColor=textBackground(t);
       textarea.style.transform=`rotate(${t.angle||0}deg)`; textarea.style.transformOrigin='center center';
       textarea.style.resize='none'; textarea.style.outline='none';
+      textarea.style.lineHeight='1.25';
       applyTextAlignment(textarea,t);
       textarea.style.overflow='auto'; textarea.style.pointerEvents=activeDetailsTool==='Text'?'auto':'none';
       textarea.addEventListener('pointerdown',e=>{
