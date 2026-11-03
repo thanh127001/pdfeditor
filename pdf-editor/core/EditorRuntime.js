@@ -1083,6 +1083,8 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       box.style.border='1px solid transparent';
       if(t.id===selectedTextId){box.style.outline='1px dashed #0d6efd';box.style.outlineOffset='0px';}
       box.style.boxSizing='border-box';
+      box.style.transform=`rotate(${t.angle||0}deg)`;
+      box.style.transformOrigin='center center';
       box.style.pointerEvents=activeDetailsTool==='Text'?'auto':'none';
       const bar=document.createElement('div');
       bar.className='position-absolute top-0 start-0 w-100';
@@ -1095,7 +1097,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       textarea.setAttribute('aria-label','Edit PDF page text');
       textarea.style.fontFamily=t.font; textarea.style.fontSize=`${t.size * paperWidth/600}px`;
       textarea.style.color=t.color; textarea.style.backgroundColor=textBackground(t);
-      textarea.style.transform=`rotate(${t.angle||0}deg)`; textarea.style.transformOrigin='center center';
+      // Rotate the container so its selection outline and handles follow the text.
       textarea.style.resize='none'; textarea.style.outline='none';
       textarea.style.lineHeight='1.25';
       applyTextAlignment(textarea,t);
@@ -1291,12 +1293,12 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       // Other shape types remain visible but cannot be selected or edited by this tool.
       box.style.pointerEvents = item.type === activeDetailsTool ? 'auto' : 'none';
       box.style.left=item.x+'%';box.style.top=item.y+'%';
-      box.style.width=Math.max(.2,item.width)+'%';box.style.height=Math.max(.2,item.height)+'%';
+      box.style.width=Math.max(.2,item.width)+'%';box.style.height=item.type==='Line'&&item.height===0?'0px':Math.max(.2,item.height)+'%';
       box.style.cursor='move';box.style.touchAction='none';
       if(item.type==='Rectangle'||item.type==='Ellipse')box.style.transform=`rotate(${item.angle||0}deg)`;
       const svg=document.createElementNS(NS,'svg');
       svg.setAttribute('viewBox','0 0 100 100');svg.setAttribute('preserveAspectRatio','none');
-      svg.style.width='100%';svg.style.height='100%';svg.style.display='block';svg.style.overflow='visible';box.style.overflow='visible';
+      svg.style.width='100%';svg.style.height=item.type==='Line'&&item.height===0?'1px':'100%';svg.style.display='block';svg.style.overflow='visible';box.style.overflow='visible';
       let figure;
       if(item.type==='Line') {
         figure=document.createElementNS(NS,'line');
@@ -1565,11 +1567,13 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       box.className='position-absolute';box.style.left=`${obj.x}%`;box.style.top=`${obj.y}%`;
       box.style.width=`${obj.width}%`;box.style.height=`${obj.height}%`;
       box.style.cursor='move';box.style.touchAction='none';
+      box.style.transform=`rotate(${obj.angle||0}deg)`;
+      box.style.transformOrigin='center center';
       box.style.pointerEvents=activeDetailsTool==='Image'?'auto':'none';
       if(obj.id===selectedImageId){box.style.outline='1px dashed #0d6efd';box.style.outlineOffset='0px';}
       const img=document.createElement('img');img.src=obj.src;img.draggable=false;img.alt='Inserted image';
       img.className='w-100 h-100';img.style.objectFit='fill';img.style.pointerEvents='none';
-      img.style.transform=`rotate(${obj.angle||0}deg) scale(${obj.flipH?-1:1},${obj.flipV?-1:1})`;
+      img.style.transform=`scale(${obj.flipH?-1:1},${obj.flipV?-1:1})`;
       img.style.transformOrigin='center center';box.append(img);
       if(obj.id===selectedImageId){
         for(const corner of ['nw','ne','sw','se']){
