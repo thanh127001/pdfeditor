@@ -969,19 +969,23 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       input.className = type === 'select' ? 'form-select form-select-sm w-auto' : type === 'color' ? 'form-control form-control-color form-control-sm' : 'form-control form-control-sm';
       if (type === 'select') {
         for (const font of choices) { const option = document.createElement('option'); option.value = font; option.textContent = font; input.append(option); }
-      } else { input.type = type; if (type === 'number') { input.min = '6'; input.max = '96'; input.step = '1'; input.style.width = '80px'; } }
+      } else { input.type = type; if (type === 'range') { input.min='1';input.max='100';input.step='1';input.className='form-range mb-0';input.style.width='110px'; } }
       input.value = settings[key];
+      const value=type==='range'?document.createElement('output'):null;
+      if(value){value.className='small text-body-secondary text-start flex-shrink-0';value.style.width='5ch';value.style.fontVariantNumeric='tabular-nums';value.textContent=input.value+'px';}
+      let saved=false;
       const commit = () => {
-        if (obj) recordPageEdit(currentPage());
-        (obj || textDefaults)[key] = key === 'size' ? Math.max(6,Math.min(96,Number(input.value)||18)) : input.value;
+        if (obj && !saved) {recordPageEdit(currentPage());saved=true;}
+        (obj || textDefaults)[key] = key === 'size' ? Math.max(1,Math.min(100,Number(input.value)||1)) : input.value;
+        if(value)value.textContent=input.value+'px';
         refreshTextAppearance(); updateButtons();
       };
-      input.addEventListener('change', commit);
-      if (type === 'color') input.addEventListener('input', commit);
-      group.append(label,input); content.append(group);
+      if(type==='range'){input.addEventListener('input',commit);input.addEventListener('change',()=>{saved=false;});}
+      else {input.addEventListener('change',commit);if(type==='color')input.addEventListener('input',commit);}
+      group.append(label,input);if(value)group.append(value);content.append(group);
     };
     control('Font','select','font',['Arial','Helvetica','Times New Roman','Georgia','Courier New','Verdana','Tahoma']);
-    control('Size','number','size');
+    control('Size','range','size');
     control('Font Color','color','color');
     control('Background Color','color','background');
     {
