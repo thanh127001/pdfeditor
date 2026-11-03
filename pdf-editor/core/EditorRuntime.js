@@ -36,7 +36,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   function recordPageEdit(page) {
     thisEditor.events.emit('page:editing',{pageId:page.id});
     const entries = pageHistory.get(page.id) || [];
-    entries.push({ rotation: page.rotation, demoNotes: page.demoNotes || '', highlights: (page.highlights || []).map(h => ({...h})), texts: (page.texts || []).map(t => ({...t})), images: (page.images || []).map(i => ({...i})), shapes: (page.shapes || []).map(v => ({...v})) });
+    entries.push({ rotation: page.rotation, pageSize: page.pageSize || 'original', demoNotes: page.demoNotes || '', highlights: (page.highlights || []).map(h => ({...h})), texts: (page.texts || []).map(t => ({...t})), images: (page.images || []).map(i => ({...i})), shapes: (page.shapes || []).map(v => ({...v})) });
     if (entries.length > 100) entries.shift();
     pageHistory.set(page.id, entries);
   }
@@ -66,6 +66,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const i = indexOf(detailsId);
     if (i < 0) { setView(false); return; }
     $('pagePosition').textContent = `Page ${i + 1} / ${pages.length}`;
+    $('detailsPageSize').value = pages[i].pageSize || 'original';
     $('editorText').value = pages[i].demoNotes || '';
     updateButtons();
     void renderDetailsPage();
@@ -424,6 +425,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     if (!page || !entries?.length) return;
     const previous = entries.pop();
     page.rotation = previous.rotation;
+    page.pageSize = previous.pageSize || 'original';
     page.demoNotes = previous.demoNotes;
     page.highlights = (previous.highlights || []).map(h => ({...h}));
     page.images = (previous.images || []).map(i => ({...i}));
@@ -1704,6 +1706,16 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     document.querySelectorAll('[data-zoom-value]').forEach(item => item.classList.toggle('active', item === button));
     zoom.dispatchEvent(new Event('change', { bubbles: true }));
   }));
+  $('detailsPageSize').addEventListener('change', () => {
+    const page = currentPage();
+    if (!page || busy) return;
+    const size = $('detailsPageSize').value;
+    if (size === (page.pageSize || 'original')) return;
+    recordPageEdit(page);
+    page.pageSize = size;
+    updateButtons();
+    void renderDetailsPage();
+  });
   $('detailsZoom').addEventListener('change', () => { if (isDetails()) void renderDetailsPage(); });
   window.addEventListener('resize', () => { if (isDetails()) void renderDetailsPage(); });
   new ResizeObserver(measureTitle).observe($('pdfEditorTitle')); measureTitle();
