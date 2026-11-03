@@ -1371,7 +1371,27 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         rotate.title='Drag to rotate '+item.type.toLowerCase();rotate.innerHTML='<i class="bi bi-arrow-clockwise text-primary" style="font-size:12px;pointer-events:none"></i>';
         box.append(rotate);
       }
-      if(item.id===selectedShapeId&&item.type===activeDetailsTool)appendObjectDeleteButton(box,item.type,()=>{recordPageEdit(currentPage());currentPage().shapes=currentPage().shapes.filter(v=>v.id!==item.id);selectedShapeId=null;renderShapeOptions();renderShapes();updateButtons();},item.type==='Line'?0:Math.max(0,Number(item.strokeWidth)||0));
+      if(item.id===selectedShapeId&&item.type===activeDetailsTool){
+        const deleteShape=()=>{recordPageEdit(currentPage());currentPage().shapes=currentPage().shapes.filter(v=>v.id!==item.id);selectedShapeId=null;renderShapeOptions();renderShapes();updateButtons();};
+        if(item.type==='Line'){
+          // Anchor the delete icon beyond the line's right endpoint, following its angle.
+          const endX=item.reverseX?0:Math.max(1,shapeLayer.clientWidth*item.width/100);
+          const endY=item.reverseY?0:Math.max(1,shapeLayer.clientHeight*item.height/100);
+          const startX=item.reverseX?Math.max(1,shapeLayer.clientWidth*item.width/100):0;
+          const startY=item.reverseY?Math.max(1,shapeLayer.clientHeight*item.height/100):0;
+          const angle=Math.atan2(endY-startY,endX-startX);
+          const anchor=document.createElement('div');
+          anchor.className='position-absolute';
+          anchor.style.left=(item.reverseX?'0':'100%');
+          anchor.style.top=item.height===0?'50%':(item.reverseY?'0':'100%');
+          anchor.style.width='0';anchor.style.height='0';
+          anchor.style.transform='translate('+Math.cos(angle)*30+'px,'+Math.sin(angle)*30+'px)';
+          appendObjectDeleteButton(anchor,'Line',deleteShape);
+          const button=anchor.querySelector('button');
+          button.style.top='-12px';button.style.left='-12px';button.style.right='auto';
+          box.append(anchor);
+        }else appendObjectDeleteButton(box,item.type,deleteShape,Math.max(0,Number(item.strokeWidth)||0));
+      }
       shapeLayer.append(box);
     }
   }
