@@ -1765,16 +1765,16 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const size = await PdfEngine.getPageSize(page);
       if (token !== pageSizeSelectionToken || currentPage() !== page || !isDetails()) return;
       const detected = pageSizeLabel(size);
-      pageSizeSelect.value = detected === '?' ? 'original' : detected;
+      pageSizeSelect.value = detected === '?' ? '' : detected;
     } catch {
-      if (token === pageSizeSelectionToken && currentPage() === page) pageSizeSelect.value = 'original';
+      if (token === pageSizeSelectionToken && currentPage() === page) pageSizeSelect.value = '';
     }
   }
   const pageSizeSelect = document.createElement('select');
   pageSizeSelect.id = 'detailsPageSize';
   pageSizeSelect.className = 'form-select form-select-sm w-auto';
   pageSizeSelect.setAttribute('aria-label', 'Page Size');
-  for (const [value, label] of [['',''],['original','Original Size'],['A5','A5'],['A4','A4'],['A3','A3'],['A2','A2'],['A1','A1'],['A0','A0'],['Letter','Letter']]) {
+  for (const [value, label] of [['',''],['A5','A5'],['A4','A4'],['A3','A3'],['A2','A2'],['A1','A1'],['A0','A0'],['Letter','Letter']]) {
     const option = document.createElement('option');
     option.value = value; option.textContent = label;
     pageSizeSelect.append(option);
@@ -1782,8 +1782,11 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   $('pageDetailsToolOptionsContent').append(pageSizeSelect);
   pageSizeSelect.addEventListener('change', () => {
     const page = currentPage();
-    if (!page || busy || !pageSizeSelect.value) return;
+    if (!page || busy) { void syncPageSizeSelection(); return; }
     const size = pageSizeSelect.value;
+    if (!size) { void syncPageSizeSelection(); return; }
+    // Invalidate any pending format detection before applying a new selection.
+    ++pageSizeSelectionToken;
     if (size === (page.pageSize || 'original')) return;
     recordPageEdit(page);
     page.pageSize = size;
