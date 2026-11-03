@@ -1374,17 +1374,19 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       if(item.id===selectedShapeId&&item.type===activeDetailsTool){
         const deleteShape=()=>{recordPageEdit(currentPage());currentPage().shapes=currentPage().shapes.filter(v=>v.id!==item.id);selectedShapeId=null;renderShapeOptions();renderShapes();updateButtons();};
         if(item.type==='Line'){
-          // Keep the same right-center anchor as every other object.
-          // Rotate the offset with the line's direction, without changing its geometry.
+          // Keep Delete anchored to the line-end handle, even when the line
+          // crosses horizontal or vertical axes. Never choose an endpoint
+          // based on which one is currently farther right.
           const width=shapeLayer.clientWidth*item.width/100;
           const height=shapeLayer.clientHeight*item.height/100;
-          const angle=Math.atan2((item.reverseX===item.reverseY?1:-1)*height,width)*180/Math.PI;
+          const dx=item.reverseX?-width:width;
+          const dy=item.reverseY?-height:height;
+          const angle=Math.atan2(dy,dx)*180/Math.PI;
           const anchor=document.createElement('div');
           anchor.className='position-absolute';
-          // Rotate around the line's center, then move to its right-hand endpoint.
-          // This keeps the icon at a constant distance as either endpoint moves.
-          const halfLength=Math.hypot(width,height)/2;
-          anchor.style.cssText='left:50%;top:50%;width:0;height:0;transform:rotate('+angle+'deg) translateX('+halfLength+'px)';
+          anchor.style.cssText='left:'+(item.width===0?'50%':item.reverseX?'0':'100%')+
+            ';top:'+(item.height===0?'50%':item.reverseY?'0':'100%')+
+            ';width:0;height:0;transform:rotate('+angle+'deg)';
           appendObjectDeleteButton(anchor,'Line',deleteShape);
           const button=anchor.querySelector('button');
           button.style.left='18px';
