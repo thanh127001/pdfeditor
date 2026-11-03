@@ -755,7 +755,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   function appendObjectDeleteButton(box,label,onDelete,offset=0){
     const b=document.createElement('button');b.type='button';
     b.className='position-absolute d-flex align-items-center justify-content-center bg-white border border-danger rounded-circle text-danger';
-    b.style.cssText='width:24px;height:24px;top:'+(-offset-30)+'px;right:'+(-offset-2)+'px;z-index:20;cursor:pointer;touch-action:none;padding:0;pointer-events:auto';
+    b.style.cssText='width:24px;height:24px;top:'+(-offset-30)+'px;right:'+(-offset)+'px;z-index:20;cursor:pointer;touch-action:none;padding:0;pointer-events:auto';
     b.title='Delete '+label;b.setAttribute('aria-label','Delete '+label);
     b.innerHTML='<i class="bi bi-trash" style="font-size:13px;pointer-events:none"></i>';
     for(const name of ['pointerdown','mousedown','touchstart','dblclick'])b.addEventListener(name,e=>e.stopPropagation());
@@ -1246,7 +1246,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       box.append(svg);
       if(item.id===selectedShapeId && item.type===activeDetailsTool) {
         box.style.outline='1px dashed #0d6efd';
-        if(item.type==='Rectangle'||item.type==='Ellipse') box.style.outlineOffset=(Math.max(0,Number(item.strokeWidth)||0)+2)+'px';
+        if(item.type==='Rectangle'||item.type==='Ellipse') box.style.outlineOffset=Math.max(0,Number(item.strokeWidth)||0)+'px';
         for(const corner of (item.type==='Line' ? ['line-start','line-end'] : ['nw','ne','sw','se'])) {
           const handle=document.createElement('div');handle.dataset.shapeHandle=corner;
           handle.className=item.type==='Line'?'position-absolute bg-primary border border-white rounded-circle':'position-absolute bg-primary';
@@ -1257,7 +1257,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
             handle.style[atStart?(item.reverseX?'right':'left'):(item.reverseX?'left':'right')]='-6px';
             handle.style.cursor='crosshair';
           } else {
-            styleObjectCornerHandle(handle,corner,Math.max(0,Number(item.strokeWidth)||0)+2);
+            styleObjectCornerHandle(handle,corner,Math.max(0,Number(item.strokeWidth)||0));
           }
           box.append(handle);
         }
@@ -1271,7 +1271,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         rotate.title='Drag to rotate '+item.type.toLowerCase();rotate.innerHTML='<i class="bi bi-arrow-clockwise text-primary" style="font-size:12px;pointer-events:none"></i>';
         box.append(rotate);
       }
-      if(item.id===selectedShapeId&&item.type===activeDetailsTool)appendObjectDeleteButton(box,item.type,()=>{recordPageEdit(currentPage());currentPage().shapes=currentPage().shapes.filter(v=>v.id!==item.id);selectedShapeId=null;renderShapeOptions();renderShapes();updateButtons();},item.type==='Line'?0:(Math.max(0,Number(item.strokeWidth)||0)+2));
+      if(item.id===selectedShapeId&&item.type===activeDetailsTool)appendObjectDeleteButton(box,item.type,()=>{recordPageEdit(currentPage());currentPage().shapes=currentPage().shapes.filter(v=>v.id!==item.id);selectedShapeId=null;renderShapeOptions();renderShapes();updateButtons();},item.type==='Line'?0:Math.max(0,Number(item.strokeWidth)||0));
       shapeLayer.append(box);
     }
   }
