@@ -1381,7 +1381,10 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
           const angle=Math.atan2((item.reverseX===item.reverseY?1:-1)*height,width)*180/Math.PI;
           const anchor=document.createElement('div');
           anchor.className='position-absolute';
-          anchor.style.cssText='left:100%;top:50%;width:0;height:0;transform:rotate('+angle+'deg)';
+          // Rotate around the line's center, then move to its right-hand endpoint.
+          // This keeps the icon at a constant distance as either endpoint moves.
+          const halfLength=Math.hypot(width,height)/2;
+          anchor.style.cssText='left:50%;top:50%;width:0;height:0;transform:rotate('+angle+'deg) translateX('+halfLength+'px)';
           appendObjectDeleteButton(anchor,'Line',deleteShape);
           const button=anchor.querySelector('button');
           button.style.left='18px';
