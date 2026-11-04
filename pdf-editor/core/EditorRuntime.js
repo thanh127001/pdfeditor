@@ -309,7 +309,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       });
       const pageLabel = document.createElement('div');
       pageLabel.id = `pageLabel_${item.id}`;
-      pageLabel.className = 'position-absolute bottom-0 start-0 m-2 px-2 py-1 small text-body-secondary bg-white bg-opacity-75 rounded';
+      pageLabel.className = 'badge bg-info position-absolute bottom-0 start-0 m-2';
       pageLabel.textContent = `Page ${i + 1}`;
       actions.append(details, sizeLabel, checkHitbox, pageLabel); card.append(thumb, actions);
       col.append(card); grid.append(col);
