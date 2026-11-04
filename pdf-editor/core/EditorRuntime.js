@@ -87,12 +87,9 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       if (token !== detailsRenderToken || !isDetails()) return;
       const zoomValue = $('detailsZoom').value;
       const availableWidth = Math.max(120, container.clientWidth - 32);
-      const availableHeight = Math.max(1, container.clientHeight - 32);
       // 100% fills the available width; other percentages scale relative to it.
       const fullWidthScale = availableWidth / size.width;
-      const scale = zoomValue === 'fit'
-        ? Math.min(fullWidthScale, availableHeight / size.height)
-        : fullWidthScale * (Number(zoomValue) / 100);
+      const scale = fullWidthScale * (Number(zoomValue) / 100);
       const width = Math.max(1, Math.round(size.width * scale));
       const height = Math.max(1, Math.round(size.height * scale));
       // Render into an offscreen canvas first so asynchronous navigation cannot overwrite the visible page.
@@ -116,10 +113,10 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     selected = new Set([id]); anchor = id; detailsId = id; selectedHighlightId = null; selectedTextId = null; selectedImageId = null; selectedShapeId = null; pendingImage = null;
     activeDetailsTool = null;
     updateDetailsToolSelection();
-    // Each entry into Page Details starts with the entire page fitted in view.
-    $('detailsZoom').value = 'fit';
-    $('detailsZoomButton').textContent = 'Zoom: Fit';
-    document.querySelectorAll('[data-zoom-value]').forEach(item => item.classList.toggle('active', item.dataset.zoomValue === 'fit'));
+    // Each entry into Page Details starts at 100% zoom.
+    $('detailsZoom').value = '100';
+    $('detailsZoomButton').textContent = 'Zoom: 100%';
+    document.querySelectorAll('[data-zoom-value]').forEach(item => item.classList.toggle('active', item.dataset.zoomValue === '100'));
     renderList(); setView(true);
   }
   function saveDemoNotes() {
@@ -774,7 +771,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     if (activeDetailsTool !== 'Highlight') selectedHighlightId = null;
     if (activeDetailsTool !== 'Text') selectedTextId = null;
     if (activeDetailsTool !== 'Image') { selectedImageId = null; pendingImage = null; }
-    if (!['Line','Rectangle','Ellipse'].includes(activeDetailsTool) || currentShape()?.type !== activeDetailsTool) selectedShapeId = null;
+    if (!['Line','Draw','Rectangle','Ellipse'].includes(activeDetailsTool) || currentShape()?.type !== activeDetailsTool) selectedShapeId = null;
     updateDetailsToolSelection();
     renderHighlights();
     renderTexts();
