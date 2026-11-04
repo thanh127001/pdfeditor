@@ -15,7 +15,7 @@
 </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
-<header id="pdfEditorTitle" class="flex-shrink-0">
+<header id="pdfEditorTitle" class="sticky-top flex-shrink-0" style="z-index: 1030;">
   <nav class="navbar bg-body-tertiary border-bottom shadow-sm py-2" aria-label="PDF Editor navigation">
     <div class="container-fluid d-flex flex-wrap align-items-center gap-2">
       <div class="d-flex align-items-center gap-2">
@@ -44,7 +44,7 @@
 </header>
 <main id="pdfEditorApp" class="container-fluid flex-grow-1">
   <section id="pageListSection">
-    <div id="pageListToolbar" class="bg-body border-bottom py-3 flex-shrink-0">
+    <div id="pageListToolbar" class="sticky-top bg-body border-bottom py-3 flex-shrink-0" style="top: var(--pdf-editor-header-height, 0px); z-index: 1020;">
       <div class="row g-2 align-items-center">
         <div class="col-12 col-lg"><div class="d-flex flex-wrap gap-2">
           <button id="addPdf" type="button" class="btn btn-primary"><i class="bi bi-file-earmark-plus me-1"></i>Add PDF</button>
@@ -81,7 +81,7 @@
     </div>
   </section>
   <section id="pageDetailsSection" class="d-none">
-    <div id="pageDetailsToolbar" class="bg-body border-bottom py-3 flex-shrink-0">
+    <div id="pageDetailsToolbar" class="sticky-top bg-body border-bottom py-3 flex-shrink-0" style="top: var(--pdf-editor-header-height, 0px); z-index: 1020;">
       <div class="row g-2 align-items-center">
         <div class="col-12 col-lg"><div class="d-flex flex-wrap gap-2 align-items-center">
           <button id="back" type="button" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i>Back to Pages</button>
@@ -185,6 +185,16 @@
   if (media.addEventListener) media.addEventListener('change', applyTheme);
   else if (media.addListener) media.addListener(applyTheme);
   applyTheme();
+})();
+</script>
+<script>
+(() => {
+  const header = document.getElementById('pdfEditorTitle');
+  const syncHeaderHeight = () => {
+    document.documentElement.style.setProperty('--pdf-editor-header-height', header.getBoundingClientRect().height + 'px');
+  };
+  new ResizeObserver(syncHeaderHeight).observe(header);
+  syncHeaderHeight();
 })();
 </script>
 <script type="module" src="./pdf-editor/index.js"></script>
