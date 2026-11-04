@@ -15,9 +15,8 @@
 </style>
 </head>
 <body class="d-flex flex-column overflow-hidden" style="height: 100dvh;">
-<header id="pdfEditorTitle" class="container-fluid bg-body border-bottom py-3 flex-shrink-0">
-    <nav class="navbar p-0" aria-label="PDF Editor navigation">
-    <div class="container-fluid px-0 d-flex justify-content-between align-items-center gap-2 flex-wrap">
+<header id="pdfEditorTitle" class="navbar navbar-expand bg-body border-bottom py-2 flex-shrink-0">
+  <nav class="container-fluid d-flex flex-wrap align-items-center gap-2" aria-label="PDF Editor navigation">
       <div class="d-flex align-items-center gap-2">
         <div class="dropdown">
           <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Navigate to another app" title="Navigate to another app"><i class="bi bi-grid"></i></button>
@@ -28,9 +27,18 @@
         </div>
         <a class="navbar-brand d-flex align-items-center gap-2 mb-0" href="/" aria-label="PDF Editor home"><i class="bi bi-file-earmark-pdf fs-3 text-danger"></i><span class="h3 mb-0">PDF Editor</span></a>
       </div>
-      <input id="exportFileName" class="form-control form-control-sm w-auto" type="text" placeholder="File Name" aria-label="File Name" value="Untitled Document" maxlength="200">
-    </div>
-    </nav>
+      <div class="d-flex flex-wrap align-items-center gap-2 ms-auto">
+        <input id="exportFileName" class="form-control form-control-sm w-auto" type="text" placeholder="File Name" aria-label="File Name" value="Untitled Document" maxlength="200">
+        <div class="dropdown">
+          <button id="themeButton" type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Choose theme"><i class="bi bi-circle-half me-1"></i>Theme</button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="themeButton">
+            <li><button type="button" class="dropdown-item" data-theme-choice="light"><i class="bi bi-sun me-2"></i>Light</button></li>
+            <li><button type="button" class="dropdown-item" data-theme-choice="dark"><i class="bi bi-moon-stars me-2"></i>Dark</button></li>
+            <li><button type="button" class="dropdown-item active" data-theme-choice="auto"><i class="bi bi-circle-half me-2"></i>Auto</button></li>
+          </ul>
+        </div>
+      </div>
+  </nav>
 </header>
 <main id="pdfEditorApp" class="container-fluid d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0;">
   <section id="pageListSection" class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0;">
@@ -142,6 +150,35 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script>
+(() => {
+  const root = document.documentElement;
+  const choices = [...document.querySelectorAll('[data-theme-choice]')];
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+  const valid = ['light', 'dark', 'auto'];
+  let choice = 'auto';
+  try {
+    const stored = localStorage.getItem('pdfEditorTheme');
+    if (valid.includes(stored)) choice = stored;
+  } catch (_) {}
+  function applyTheme() {
+    root.setAttribute('data-bs-theme', choice === 'auto' ? (media.matches ? 'dark' : 'light') : choice);
+    choices.forEach(button => {
+      const selected = button.dataset.themeChoice === choice;
+      button.classList.toggle('active', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    });
+  }
+  choices.forEach(button => button.addEventListener('click', () => {
+    choice = button.dataset.themeChoice;
+    try { localStorage.setItem('pdfEditorTheme', choice); } catch (_) {}
+    applyTheme();
+  }));
+  if (media.addEventListener) media.addEventListener('change', applyTheme);
+  else if (media.addListener) media.addListener(applyTheme);
+  applyTheme();
+})();
+</script>
 <script type="module" src="./pdf-editor/index.js"></script>
 </body>
 </html>
