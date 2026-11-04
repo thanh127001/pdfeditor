@@ -1488,7 +1488,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         const box=document.createElement('div');box.className='position-absolute';
         box.dataset.shapeId=item.id;
         box.style.cssText='left:'+item.x+'%;top:'+item.y+'%;width:'+Math.max(.2,item.width)+'%;height:'+Math.max(.2,item.height)+'%;overflow:visible;touch-action:none;cursor:move;transform:rotate('+(item.angle||0)+'deg)';
-        box.style.pointerEvents='none';
+        box.style.pointerEvents=activeDetailsTool==='Draw'?'auto':'none';
         const svg=document.createElementNS(NS,'svg');
         svg.setAttribute('viewBox','0 0 100 100');svg.setAttribute('preserveAspectRatio','none');
         svg.style.cssText='width:100%;height:100%;overflow:visible;pointer-events:none';
@@ -1509,9 +1509,12 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
             corner.length===1?styleObjectSideHandle(handle,corner):styleObjectCornerHandle(handle,corner);
             box.append(handle);
           }
+          const stem=document.createElement('div');stem.className='position-absolute bg-primary';
+          stem.style.cssText='width:2px;height:22px;left:calc(50% - 1px);bottom:100%;pointer-events:none';box.append(stem);
           const rotate=document.createElement('div');rotate.dataset.shapeHandle='rotate';
-          rotate.className='position-absolute bg-primary border border-white rounded-circle';
-          rotate.style.cssText='width:14px;height:14px;left:50%;top:-28px;transform:translateX(-50%);cursor:grab;touch-action:none';
+          rotate.className='position-absolute bg-white border border-primary border-2 rounded-circle d-flex align-items-center justify-content-center';
+          rotate.style.cssText='width:22px;height:22px;left:calc(50% - 11px);bottom:calc(100% + 22px);cursor:grab;touch-action:none;z-index:6';
+          rotate.title='Drag to rotate draw';rotate.innerHTML='<i class="bi bi-arrow-clockwise text-primary" style="font-size:12px;pointer-events:none"></i>';
           box.append(rotate);
           appendObjectDeleteButton(box,'Draw',()=>{
             recordPageEdit(currentPage());
