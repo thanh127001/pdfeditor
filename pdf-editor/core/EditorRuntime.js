@@ -86,7 +86,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       if (token !== detailsRenderToken || !isDetails()) return;
       const zoomValue = $('detailsZoom').value;
       const availableWidth = Math.max(120, container.clientWidth - 32);
-      const availableHeight = Math.max(1, $('pageDetailsScrollArea').clientHeight - 32);
+      const availableHeight = Math.max(1, container.clientHeight - 32);
       // 100% fills the available width; other percentages scale relative to it.
       const fullWidthScale = availableWidth / size.width;
       const scale = zoomValue === 'fit'
