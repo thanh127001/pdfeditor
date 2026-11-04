@@ -79,7 +79,7 @@
         </div></div>
       </div>
     </div>
-    <div id="pageListScrollArea" class="py-3 flex-grow-1 overflow-auto">
+    <div id="pageListScrollArea" class="py-3 flex-grow-1 overflow-y-auto overflow-x-hidden">
     <div>
     <div id="emptyState" class="rounded p-5 text-center text-secondary border border-2 border-secondary-subtle">No pages yet. Add a PDF or create a blank page.</div>
     <div id="pages" class="row row-cols-2 row-cols-sm-3 row-cols-lg-6 g-3" aria-label="PDF pages"></div>
@@ -141,11 +141,7 @@
   </section>
 </main>
 <input id="fileInput" type="file" accept=".pdf,application/pdf" multiple hidden>
-<footer class="mt-auto bg-body-tertiary border-top flex-shrink-0">
-  <div class="container-fluid py-1">
-    <div id="editorStatus" class="small text-body-secondary" role="status" aria-live="polite"></div>
-  </div>
-</footer>
+<div id="editorStatus" class="visually-hidden" role="status" aria-live="polite"></div>
 <div id="clearAllModal" class="modal fade" tabindex="-1" aria-labelledby="clearAllModalLabel"><div class="modal-dialog"><div class="modal-content">
   <div class="modal-header"><h2 id="clearAllModalLabel" class="modal-title fs-5">Clear All Pages?</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
   <div class="modal-body">Are you sure you want to remove all pages? This action cannot be undone. Undo history will also be deleted.</div>
