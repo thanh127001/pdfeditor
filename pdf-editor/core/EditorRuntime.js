@@ -37,7 +37,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   function recordPageEdit(page) {
     thisEditor.events.emit('page:editing',{pageId:page.id});
     const entries = pageHistory.get(page.id) || [];
-    entries.push({ rotation: page.rotation, pageSize: page.pageSize || 'original', demoNotes: page.demoNotes || '', highlights: (page.highlights || []).map(h => ({...h})), texts: (page.texts || []).map(t => ({...t})), images: (page.images || []).map(i => ({...i})), shapes: (page.shapes || []).map(v => ({...v})) });
+    entries.push({ rotation: page.rotation, pageSize: page.pageSize || 'original', demoNotes: page.demoNotes || '', highlights: (page.highlights || []).map(h => ({...h})), texts: (page.texts || []).map(t => ({...t})), images: (page.images || []).map(i => ({...i})), shapes: (page.shapes || []).map(v => ({...v, ...(v.points ? {points:v.points.map(p=>({...p}))} : {})})) });
     if (entries.length > 100) entries.shift();
     pageHistory.set(page.id, entries);
   }
@@ -465,7 +465,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     page.highlights = (previous.highlights || []).map(h => ({...h}));
     page.images = (previous.images || []).map(i => ({...i}));
     page.texts = (previous.texts || []).map(t => ({...t}));
-    page.shapes = (previous.shapes || []).map(v => ({...v}));
+    page.shapes = (previous.shapes || []).map(v => ({...v, ...(v.points ? {points:v.points.map(p=>({...p}))} : {})}));
     selectedShapeId = null;
     selectedTextId = null; selectedImageId = null; pendingImage = null;
     selectedHighlightId = null;
@@ -1617,7 +1617,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     }
     const bounds=hit?.getBoundingClientRect();
     const centerX=bounds?bounds.left+bounds.width/2:0,centerY=bounds?bounds.top+bounds.height/2:0;
-    shapeGesture={id:item.id,pageId:page.id,mode,start:p,original:{...item},saved:mode==='create',
+    shapeGesture={id:item.id,pageId:page.id,mode,start:p,original:{...item,...(item.points?{points:item.points.map(v=>({...v}))}:{})},saved:mode==='create',
       centerX,centerY,startAngle:Math.atan2(e.clientY-centerY,e.clientX-centerX)*180/Math.PI,moved:false};
     shapeLayer.setPointerCapture(e.pointerId);e.preventDefault();
     renderShapeOptions();renderShapes();updateButtons();
