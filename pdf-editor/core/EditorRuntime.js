@@ -682,6 +682,12 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       button.classList.toggle('btn-outline-primary', !active);
       button.setAttribute('aria-pressed', String(active));
     });
+    const holding = !activeDetailsTool;
+    $('toolHold').classList.toggle('btn-primary', holding);
+    $('toolHold').classList.toggle('btn-outline-primary', !holding);
+    $('toolHold').setAttribute('aria-pressed', String(holding));
+    $('editorPage').style.cursor = holding ? 'grab' : '';
+    $('editorPage').style.touchAction = holding ? 'none' : '';
     const row = $('pageDetailsToolOptions');
     row.classList.toggle('d-none', !activeDetailsTool);
     const content = $('pageDetailsToolOptionsContent');
@@ -707,6 +713,39 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       content.append(label);
     }
   }
+  // Hold is the default navigation mode whenever no editing tool is selected.
+  $('toolHold').addEventListener('click', () => {
+    activeDetailsTool = null;
+    selectedHighlightId = null; selectedTextId = null; selectedImageId = null; selectedShapeId = null; pendingImage = null;
+    updateDetailsToolSelection();
+    renderHighlights(); renderTexts(); renderImages(); renderShapes();
+  });
+  // Drag the viewport (not the PDF content), without altering document history.
+  let holdDrag = null;
+  const holdViewport = $('editorPage');
+  holdViewport.addEventListener('pointerdown', e => {
+    if (activeDetailsTool || !isDetails() || e.button !== 0 || !e.isPrimary) return;
+    holdDrag = { id: e.pointerId, x: e.clientX, y: e.clientY, left: holdViewport.scrollLeft, top: holdViewport.scrollTop };
+    holdViewport.setPointerCapture(e.pointerId);
+    holdViewport.style.cursor = 'grabbing';
+    e.preventDefault();
+    e.stopPropagation();
+  }, true);
+  holdViewport.addEventListener('pointermove', e => {
+    if (!holdDrag || holdDrag.id !== e.pointerId) return;
+    holdViewport.scrollLeft = holdDrag.left - (e.clientX - holdDrag.x);
+    holdViewport.scrollTop = holdDrag.top - (e.clientY - holdDrag.y);
+    e.preventDefault();
+  });
+  const endHoldDrag = e => {
+    if (!holdDrag || holdDrag.id !== e.pointerId) return;
+    holdDrag = null;
+    holdViewport.style.cursor = activeDetailsTool ? '' : 'grab';
+    if (holdViewport.hasPointerCapture(e.pointerId)) holdViewport.releasePointerCapture(e.pointerId);
+  };
+  holdViewport.addEventListener('pointerup', endHoldDrag);
+  holdViewport.addEventListener('pointercancel', endHoldDrag);
+  holdViewport.addEventListener('lostpointercapture', endHoldDrag);
   document.querySelectorAll('[data-demo-tool]').forEach(button => button.addEventListener('click', () => {
     const tool = button.dataset.demoTool;
     activeDetailsTool = activeDetailsTool === tool ? null : tool;
