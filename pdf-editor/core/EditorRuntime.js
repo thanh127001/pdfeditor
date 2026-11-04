@@ -285,19 +285,21 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const thumb = document.createElement('div'); thumb.className = 'thumb ratio bg-body-tertiary overflow-hidden rounded-top'; thumb.draggable = false;
       thumb.style.setProperty('--bs-aspect-ratio','141.4%');
       const canvas = document.createElement('canvas'); canvas.className = 'position-absolute top-50 start-50 translate-middle mw-100 mh-100 object-fit-contain bg-white shadow-sm'; canvas.draggable = false; canvas.setAttribute('aria-label', `Preview page ${i + 1}`); thumb.append(canvas);
-      const actions = document.createElement('div'); actions.className = 'position-absolute top-0 start-0 w-100 h-100 pe-none';
+      const actions = document.createElement('div'); actions.className = 'position-absolute top-0 start-0 w-100 h-100 pe-none d-flex flex-column justify-content-between p-2 gap-2';
+      const topActions = document.createElement('div'); topActions.className = 'd-flex flex-wrap align-items-start justify-content-between gap-2';
+      const bottomActions = document.createElement('div'); bottomActions.className = 'd-flex flex-wrap align-items-end justify-content-between gap-2';
       const check = document.createElement('input'); check.type = 'checkbox'; check.className = 'thumb-select form-check-input m-0 pe-none'; check.style.width = 'clamp(18px,2.3vw,25px)'; check.style.height = 'clamp(18px,2.3vw,25px)'; check.id = `pageCheck_${item.id}`; check.checked = selected.has(item.id); check.setAttribute('aria-label', `Select page ${i + 1}`);
-      const checkHitbox = document.createElement('label'); checkHitbox.className = 'position-absolute bottom-0 end-0 d-flex align-items-center justify-content-center p-3 pe-auto bg-white bg-opacity-75 rounded'; checkHitbox.style.cursor = 'pointer'; checkHitbox.id = `pageCheckHitbox_${item.id}`; checkHitbox.htmlFor = check.id; checkHitbox.append(check);
+      const checkHitbox = document.createElement('label'); checkHitbox.className = 'd-flex align-items-center justify-content-center p-2 pe-auto bg-white bg-opacity-75 rounded'; checkHitbox.style.cursor = 'pointer'; checkHitbox.id = `pageCheckHitbox_${item.id}`; checkHitbox.htmlFor = check.id; checkHitbox.append(check);
       checkHitbox.addEventListener('click', e => { e.stopPropagation(); if (!busy) choose(item.id, true); e.preventDefault(); });
       checkHitbox.addEventListener('dragstart', e => e.preventDefault());
       const details = document.createElement('button'); details.type = 'button'; details.id = `pageDetails_${item.id}`;
-      details.className = 'btn btn-sm btn-primary position-absolute top-0 end-0 m-2 pe-auto'; details.innerHTML = '<i class="bi bi-zoom-in me-1"></i>Details';
+      details.className = 'btn btn-sm btn-primary pe-auto'; details.innerHTML = '<i class="bi bi-zoom-in me-1"></i>Details';
       details.style.setProperty('--bs-btn-hover-color', 'var(--bs-btn-color)');
       details.style.setProperty('--bs-btn-hover-bg', 'var(--bs-btn-bg)');
       details.style.setProperty('--bs-btn-hover-border-color', 'var(--bs-btn-border-color)');
       details.addEventListener('click', e => { e.stopPropagation(); openDetails(item.id); });
       const sizeLabel = document.createElement('div');
-      sizeLabel.className = 'badge bg-info position-absolute top-0 start-0 m-2';
+      sizeLabel.className = 'badge bg-info';
       sizeLabel.textContent = '…';
       sizeLabel.title = 'Page size';
       void PdfEngine.getPageSize(item).then(size => {
@@ -309,9 +311,11 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       });
       const pageLabel = document.createElement('div');
       pageLabel.id = `pageLabel_${item.id}`;
-      pageLabel.className = 'badge bg-info position-absolute bottom-0 start-0 m-2';
+      pageLabel.className = 'badge bg-info';
       pageLabel.textContent = `Page ${i + 1}`;
-      actions.append(details, sizeLabel, checkHitbox, pageLabel); card.append(thumb, actions);
+      topActions.append(sizeLabel, details);
+      bottomActions.append(pageLabel, checkHitbox);
+      actions.append(topActions, bottomActions); card.append(thumb, actions);
       col.append(card); grid.append(col);
       // Selection is changed on click, not pointerdown, so an unselected card can
       // be dragged without destroying the drag source by rerendering the grid.
