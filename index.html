@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-bs-theme="auto">
+<html lang="en" class="h-100" data-bs-theme="auto">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PDF Editor</title>
@@ -14,7 +14,7 @@
 }
 </style>
 </head>
-<body class="d-flex flex-column overflow-hidden" style="height: 100dvh;">
+<body class="d-flex flex-column h-100 overflow-hidden">
 <header id="pdfEditorTitle" class="flex-shrink-0">
   <nav class="navbar bg-body-tertiary border-bottom shadow-sm py-2" aria-label="PDF Editor navigation">
     <div class="container-fluid d-flex flex-wrap align-items-center gap-2">
@@ -135,7 +135,11 @@
   </section>
 </main>
 <input id="fileInput" type="file" accept=".pdf,application/pdf" multiple hidden>
-<div id="editorStatus" class="small text-secondary" role="status" aria-live="polite"></div>
+<footer class="mt-auto bg-body-tertiary border-top flex-shrink-0">
+  <div class="container-fluid py-1">
+    <div id="editorStatus" class="small text-body-secondary" role="status" aria-live="polite"></div>
+  </div>
+</footer>
 <div id="clearAllModal" class="modal fade" tabindex="-1" aria-labelledby="clearAllModalLabel"><div class="modal-dialog"><div class="modal-content">
   <div class="modal-header"><h2 id="clearAllModalLabel" class="modal-title fs-5">Clear All Pages?</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
   <div class="modal-body">Are you sure you want to remove all pages? This action cannot be undone. Undo history will also be deleted.</div>
