@@ -1488,7 +1488,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         const box=document.createElement('div');box.className='position-absolute';
         box.dataset.shapeId=item.id;
         box.style.cssText='left:'+item.x+'%;top:'+item.y+'%;width:'+Math.max(.2,item.width)+'%;height:'+Math.max(.2,item.height)+'%;overflow:visible;touch-action:none;cursor:move;transform:rotate('+(item.angle||0)+'deg)';
-        box.style.pointerEvents=activeDetailsTool==='Draw'?'auto':'none';
+        box.style.pointerEvents='none';
         const svg=document.createElementNS(NS,'svg');
         svg.setAttribute('viewBox','0 0 100 100');svg.setAttribute('preserveAspectRatio','none');
         svg.style.cssText='width:100%;height:100%;overflow:visible;pointer-events:none';
@@ -1499,6 +1499,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         stroke.setAttribute('stroke-width',shapeStrokePixels(item));
         stroke.setAttribute('stroke-linecap','round');stroke.setAttribute('stroke-linejoin','round');
         stroke.setAttribute('vector-effect','non-scaling-stroke');
+        stroke.style.pointerEvents=activeDetailsTool==='Draw'?'stroke':'none';
         svg.append(stroke);box.append(svg);
         if(item.id===selectedShapeId&&activeDetailsTool==='Draw'){
           box.style.outline='1px dashed #0d6efd';
