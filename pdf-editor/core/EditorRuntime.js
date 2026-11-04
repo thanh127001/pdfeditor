@@ -15,6 +15,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   const initialShapeDefaults = { stroke: "#0d6efd", strokeWidth: 2, opacity: 100, fill: "#ffffff", fillOpacity: 0, square: false, circle: false };
   const shapeDefaultsByTool = {
     Line: {...initialShapeDefaults},
+    Draw: {...initialShapeDefaults},
     Rectangle: {...initialShapeDefaults},
     Ellipse: {...initialShapeDefaults}
   };
@@ -74,7 +75,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     if (activeDetailsTool === 'PageSize') updateDetailsToolSelection();
     if (activeDetailsTool === "Text") renderTextOptions();
     if (activeDetailsTool === "Image") renderImageOptions();
-    if (["Line","Rectangle","Ellipse"].includes(activeDetailsTool)) renderShapeOptions();
+    if (["Line","Draw","Rectangle","Ellipse"].includes(activeDetailsTool)) renderShapeOptions();
   }
   async function renderDetailsPage() {
     const token = ++detailsRenderToken;
@@ -587,6 +588,19 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       });
     }
     for(const s of page.shapes||[]) {
+      if(s.type==='Draw'){
+        const points=s.points||[];
+        if(points.length && Number(s.strokeWidth)>0 && Number(s.opacity)>0){
+          ctx.save();ctx.beginPath();
+          ctx.moveTo(px(points[0].x),py(points[0].y));
+          for(const point of points.slice(1))ctx.lineTo(px(point.x),py(point.y));
+          if(points.length===1){ctx.lineTo(px(points[0].x)+.01,py(points[0].y)+.01);}
+          ctx.strokeStyle=color(s.stroke,s.opacity);
+          ctx.lineWidth=Number(s.strokeWidth)*W/600;
+          ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();ctx.restore();
+        }
+        continue;
+      }
       const x=px(s.x),y=py(s.y),w=px(s.width),h=py(s.height);
       rotated(x,y,w,h,s.angle,(xx,yy,ww,hh)=>{
         ctx.beginPath();
@@ -670,7 +684,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   let activeDetailsTool = null;
   const toolOptionLabels = {
     Highlight: 'Highlight options', Text: 'Text options', Image: 'Image options',
-    Line: 'Line options', Rectangle: 'Rectangle options', Ellipse: 'Ellipse options'
+    Line: 'Line options', Draw: 'Draw options', Rectangle: 'Rectangle options', Ellipse: 'Ellipse options'
   };
   function updateDetailsToolSelection() {
     // Page Size is a page command, not a registered drawing tool.
@@ -689,9 +703,14 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     $('editorPage').style.cursor = holding ? 'grab' : '';
     $('editorPage').style.touchAction = holding ? 'none' : '';
     const row = $('pageDetailsToolOptions');
-    row.classList.toggle('d-none', !activeDetailsTool);
+    row.classList.toggle('d-none', false);
     const content = $('pageDetailsToolOptionsContent');
     content.replaceChildren();
+    if (!activeDetailsTool) {
+      const hint=document.createElement('span');hint.className='small text-secondary w-100';
+      hint.textContent='Drag the page to pan around the document.';
+      content.append(hint);return;
+    }
     if (activeDetailsTool === 'PageSize') {
       const label = document.createElement('label');
       label.className = 'form-label small mb-0 text-nowrap';
@@ -700,12 +719,15 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const select = pageSizeSelect;
       void syncPageSizeSelection();
       content.append(label, select);
+      const hint=document.createElement('span');hint.className='small text-secondary w-100';
+      hint.textContent='Choose a page size to resize the current page.';
+      content.append(hint);
       return;
     }
     if (activeDetailsTool === 'Highlight') { renderHighlightOptions(); return; }
     if (activeDetailsTool === 'Text') { renderTextOptions(); return; }
     if (activeDetailsTool === 'Image') { renderImageOptions(); return; }
-    if (['Line','Rectangle','Ellipse'].includes(activeDetailsTool)) { renderShapeOptions(); return; }
+    if (['Line','Draw','Rectangle','Ellipse'].includes(activeDetailsTool)) { renderShapeOptions(); return; }
     if (activeDetailsTool) {
       const label = document.createElement('span');
       label.className = 'small text-secondary';
@@ -793,7 +815,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     selectedHighlightId = match.type === 'Highlight' ? match.id : null;
     selectedTextId = match.type === 'Text' ? match.id : null;
     selectedImageId = match.type === 'Image' ? match.id : null;
-    selectedShapeId = ['Line','Rectangle','Ellipse'].includes(match.type) ? match.id : null;
+    selectedShapeId = ['Line','Draw','Rectangle','Ellipse'].includes(match.type) ? match.id : null;
     pendingImage = null;
     updateDetailsToolSelection();
     renderHighlights(); renderTexts(); renderImages(); renderShapes(); updateButtons();
@@ -847,7 +869,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     makeControl('Opacity', 'range', 'highlightOpacity', settings.opacity, 5, 100, 5);
     const hint = document.createElement('span');
     hint.className = 'small text-secondary w-100';
-    hint.textContent = 'Drag horizontally on the page to highlight';
+    hint.textContent = 'Drag horizontally on the page to highlight text.';
     content.append(hint);
   }
   const OBJECT_HANDLE_SIZE=12;
@@ -1054,7 +1076,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   function endHighlightGesture(e) {
     if (!highlightGesture) return;
     const g=highlightGesture;
-    if(e.type==='pointerup'&&g.mode==='create'&&!g.moved){
+    if(e.type==='pointerup'&&g.mode==='create'&&!g.moved&&activeDetailsTool!=='Draw'){
       const h=(currentPage()?.highlights||[]).find(v=>v.id===g.id);
       if(h){
         const d=clickCreateDimensions(highlightLayer,g.start.x,g.start.y);
@@ -1202,7 +1224,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       group.append(label,buttons);content.append(group);
     }
     const hint=document.createElement('span'); hint.className='small text-secondary w-100';
-    hint.textContent='Click the page to add text, then edit or drag the text box'; content.append(hint);
+    hint.textContent='Click the page to add text. Edit the text, or drag its box to move it.'; content.append(hint);
   }
   function renderTexts() {
     textLayer.replaceChildren();
@@ -1355,7 +1377,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   // Shape annotations: geometry uses page-relative percentages, while stroke
   // thickness is expressed in CSS pixels at 100% page zoom.
   const shapeLayer = $('shapeLayer');
-  const shapeTools = ['Line', 'Rectangle', 'Ellipse'];
+  const shapeTools = ['Line', 'Draw', 'Rectangle', 'Ellipse'];
   const currentShape = () => (currentPage()?.shapes || []).find(v => v.id === selectedShapeId && v.type === activeDetailsTool);
   function selectShape(id) {
     selectedShapeId = id;
@@ -1396,8 +1418,8 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     }
     option('Line Width','range','strokeWidth',0,20,1);
     option('Line Color','color','stroke');
-    option(activeDetailsTool==='Line'?'Opacity':'Line Opacity','range','opacity',0,100,5);
-    if(activeDetailsTool!=='Line') {
+    option(['Line','Draw'].includes(activeDetailsTool)?'Opacity':'Line Opacity','range','opacity',0,100,5);
+    if(!['Line','Draw'].includes(activeDetailsTool)) {
       option('Fill Color','color','fill');
       option('Fill Opacity','range','fillOpacity',0,100,5);
     }
@@ -1421,7 +1443,11 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       group.append(input,label);content.append(group);
     }
     const hint=document.createElement('div');hint.className='w-100 small text-secondary';
-    hint.textContent=activeDetailsTool==='Line'?'Drag to draw a line in any direction. Drag either circular endpoint to resize or rotate around the other endpoint; drag the line to move.':'Drag on the page to draw a '+activeDetailsTool.toLowerCase()+'. Drag to move; drag the blue handles to resize.';
+    hint.textContent=activeDetailsTool==='Line'
+      ?'Drag to draw a line. Drag an endpoint to resize, or drag the line to move.'
+      :activeDetailsTool==='Draw'
+      ?'Drag on the page to draw freely. Drag a stroke to move it.'
+      :'Drag to draw a '+activeDetailsTool.toLowerCase()+'. Drag the object to move it, or drag its handles to resize.';
     content.append(hint);
   }
   function renderShapes() {
@@ -1429,6 +1455,38 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     shapeLayer.style.pointerEvents=shapeTools.includes(activeDetailsTool)?'auto':'none';
     const NS='http://www.w3.org/2000/svg';
     for(const item of currentPage()?.shapes||[]) {
+      if(item.type==='Draw'){
+        const box=document.createElement('div');box.className='position-absolute top-0 start-0 w-100 h-100';
+        box.dataset.shapeId=item.id;
+        box.style.pointerEvents=activeDetailsTool==='Draw'?'none':'none';
+        const svg=document.createElementNS(NS,'svg');
+        svg.setAttribute('viewBox','0 0 100 100');svg.setAttribute('preserveAspectRatio','none');
+        svg.style.cssText='width:100%;height:100%;overflow:visible;pointer-events:none';
+        const stroke=document.createElementNS(NS,'polyline');
+        stroke.setAttribute('points',(item.points||[]).map(p=>p.x+','+p.y).join(' '));
+        stroke.setAttribute('fill','none');stroke.setAttribute('stroke',item.stroke);
+        stroke.setAttribute('stroke-opacity',item.opacity/100);
+        stroke.setAttribute('stroke-width',Math.max(0,Number(item.strokeWidth))*100/Math.max(1,shapeLayer.clientWidth/6));
+        stroke.setAttribute('stroke-linecap','round');stroke.setAttribute('stroke-linejoin','round');
+        stroke.setAttribute('vector-effect','non-scaling-stroke');
+        stroke.style.pointerEvents=activeDetailsTool==='Draw'?'stroke':'none';
+        stroke.style.cursor='move';
+        box.append(svg);svg.append(stroke);
+        if(item.id===selectedShapeId&&activeDetailsTool==='Draw'){
+          const points=item.points||[],last=points[points.length-1];
+          if(last){
+            const anchor=document.createElement('div');anchor.className='position-absolute';
+            anchor.style.cssText='left:'+last.x+'%;top:'+last.y+'%;width:0;height:0;pointer-events:auto';
+            appendObjectDeleteButton(anchor,'Draw',()=>{
+              recordPageEdit(currentPage());
+              currentPage().shapes=currentPage().shapes.filter(v=>v.id!==item.id);
+              selectedShapeId=null;renderShapeOptions();renderShapes();updateButtons();
+            });
+            box.append(anchor);
+          }
+        }
+        shapeLayer.append(box);continue;
+      }
       const box=document.createElement('div');
       box.className='position-absolute';box.dataset.shapeId=item.id;
       // Other shape types remain visible but cannot be selected or edited by this tool.
@@ -1554,6 +1612,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       recordPageEdit(page);
       item={id:'shape-'+(++shapeCounter),type:activeDetailsTool,x:p.x,y:p.y,width:.2,height:.2,
         reverseX:false,reverseY:false,...currentShapeDefaults()};
+      if(activeDetailsTool==='Draw')item.points=[{x:p.x,y:p.y}];
       (page.shapes ||= []).push(item);selectedShapeId=item.id;mode='create';
     }
     const bounds=hit?.getBoundingClientRect();
@@ -1576,7 +1635,13 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       item.angle=(g.original.angle||0)+delta;
       renderShapes();updateButtons();return;
     }
-    if(g.mode==='create'){
+    if(g.mode==='create'&&item.type==='Draw'){
+      const points=item.points;
+      const last=points[points.length-1];
+      if(Math.hypot((p.x-last.x)*shapeLayer.clientWidth/100,(p.y-last.y)*shapeLayer.clientHeight/100)>=1){
+        points.push({x:p.x,y:p.y});g.moved=true;
+      }
+    }else if(g.mode==='create'){
       const r=shapeLayer.getBoundingClientRect();
       if(Math.hypot(dx*r.width/100,dy*r.height/100)>3)g.moved=true;
       item.x=Math.min(g.start.x,p.x);item.y=Math.min(g.start.y,p.y);
@@ -1586,6 +1651,13 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         item.height=Math.max(.2,Math.min(100-item.y,item.width*factor));
       }
       item.reverseX=p.x<g.start.x;item.reverseY=p.y<g.start.y;
+    }else if(g.mode==='move'&&item.type==='Draw'){
+      const points=g.original.points||[];
+      const minX=Math.min(...points.map(v=>v.x)),maxX=Math.max(...points.map(v=>v.x));
+      const minY=Math.min(...points.map(v=>v.y)),maxY=Math.max(...points.map(v=>v.y));
+      const shiftX=Math.max(-minX,Math.min(100-maxX,dx));
+      const shiftY=Math.max(-minY,Math.min(100-maxY,dy));
+      item.points=points.map(v=>({x:v.x+shiftX,y:v.y+shiftY}));
     }else if(g.mode==='move'){
       item.x=Math.max(0,Math.min(100-item.width,g.original.x+dx));
       item.y=Math.max(0,Math.min(100-item.height,g.original.y+dy));
@@ -1690,7 +1762,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       content.append(transformGroup);
     }
     const hint=document.createElement('span');hint.className='small text-secondary w-100';
-    hint.textContent='Choose an image, then click the page to place it. Drag to move, resize, or rotate using the handle above the image.';
+    hint.textContent='Choose an image, then click the page to place it. Drag the image to move it, or use its handles to resize or rotate.';
     content.append(hint);
   }
   imageInput.addEventListener('change', async ()=>{
