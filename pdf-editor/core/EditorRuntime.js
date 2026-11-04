@@ -749,7 +749,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   const holdViewport = $('editorPage');
   holdViewport.addEventListener('pointerdown', e => {
     if (activeDetailsTool || !isDetails() || e.button !== 0 || !e.isPrimary) return;
-    holdDrag = { id: e.pointerId, x: e.clientX, y: e.clientY, left: holdViewport.scrollLeft, top: holdViewport.scrollTop };
+    holdDrag = { id: e.pointerId, x: e.clientX, y: e.clientY, left: window.scrollX, top: window.scrollY };
     holdViewport.setPointerCapture(e.pointerId);
     holdViewport.style.cursor = 'grabbing';
     e.preventDefault();
@@ -757,8 +757,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   }, true);
   holdViewport.addEventListener('pointermove', e => {
     if (!holdDrag || holdDrag.id !== e.pointerId) return;
-    holdViewport.scrollLeft = holdDrag.left - (e.clientX - holdDrag.x);
-    holdViewport.scrollTop = holdDrag.top - (e.clientY - holdDrag.y);
+    window.scrollTo(holdDrag.left - (e.clientX - holdDrag.x), holdDrag.top - (e.clientY - holdDrag.y));
     e.preventDefault();
   });
   const endHoldDrag = e => {
