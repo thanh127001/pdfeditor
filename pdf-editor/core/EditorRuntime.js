@@ -1625,23 +1625,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     upload.innerHTML='<i class="bi bi-image me-1"></i>Choose Image';
     upload.addEventListener('click',()=>imageInput.click()); content.append(upload);
     {
-      const group = document.createElement('div'); group.className='d-flex align-items-center gap-2 flex-wrap';
-      const ratioLabel=document.createElement('label'); ratioLabel.className='form-check-label small'; ratioLabel.htmlFor='imageRatio'; ratioLabel.textContent='Keep ratio';
-      const ratio=document.createElement('input'); ratio.type='checkbox'; ratio.id='imageRatio'; ratio.checked=settings.keepRatio; ratio.className='form-check-input m-0'; ratio.disabled=!obj;
-      ratio.addEventListener('change',()=>{
-        if(!obj)return;
-        recordPageEdit(currentPage());obj.keepRatio=ratio.checked;
-        if(obj.keepRatio){
-          const page=imagePagePixels(),ratioPx=obj.aspectPage*page.width/page.height;
-          let w=imageToPixels(obj).width,h=w/ratioPx;
-          const maxW=(100-obj.x)*page.width/100,maxH=(100-obj.y)*page.height/100;
-          const factor=Math.min(1,maxW/w,maxH/h);
-          w*=factor;h*=factor;
-          obj.width=w/page.width*100;obj.height=h/page.height*100;
-        }
-        renderImages();renderImageOptions();updateButtons();
-      });
-      group.append(ratio,ratioLabel);content.append(group);
       const transformGroup=document.createElement('div');
       transformGroup.className='d-flex align-items-center gap-2 flex-wrap';
       const flipH=document.createElement('button');flipH.type='button';
@@ -1767,7 +1750,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const anchorY=c.includes('n')?o.y+o.height:o.y;
       let w=c==='n'||c==='s'?o.width:Math.max(1,o.width+(c.includes('w')?-dx:dx));
       let h=c==='w'||c==='e'?o.height:Math.max(1,o.height+(c.includes('n')?-dy:dy));
-      if(obj.keepRatio && c.length>1){
+      if(c.length>1){
         if(Math.abs(dx)>=Math.abs(dy*o.aspectPage))h=w/o.aspectPage;
         else w=h*o.aspectPage;
       }
