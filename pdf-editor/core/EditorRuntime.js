@@ -147,8 +147,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const card = col.querySelector('.page-card');
       if (!draggingIds) card?.classList.remove('opacity-50');
       card?.classList.toggle('border-primary', isSelected);
-      card?.classList.toggle('border-3', isSelected);
-      card?.classList.toggle('shadow-sm', isSelected);
+      card?.classList.toggle('border-secondary', !isSelected);
       const selectButton = col.querySelector('.thumb-select');
       if (selectButton) {
         selectButton.classList.toggle('active', isSelected);
@@ -281,7 +280,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     grid.className = `row row-cols-2 row-cols-sm-3 row-cols-lg-${columns} g-3`;
     for (const [i, item] of pages.entries()) {
       const col = document.createElement('div'); col.className = 'col'; col.dataset.pageId = item.id;
-      const card = document.createElement('div'); card.className = `page-card card h-100 position-relative user-select-none ${selected.has(item.id) ? 'border-primary border-3 shadow-sm' : ''}`;
+      const card = document.createElement('div'); card.className = `page-card card h-100 position-relative user-select-none ${selected.has(item.id) ? 'border-primary' : 'border-secondary'}`;
       
       card.draggable = true; // Keep native drag enabled after async PDF import; dragstart checks busy.
       const thumb = document.createElement('div'); thumb.className = 'thumb ratio bg-body-tertiary overflow-hidden rounded-top'; thumb.draggable = false;
