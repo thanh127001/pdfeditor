@@ -24,6 +24,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   const textDefaults = thisEditor.toolSettings.get('Text');
   const highlightDefaults = thisEditor.toolSettings.get('Highlight');
   let detailsRenderToken = 0;
+  let detailsPageWidthPt = 0;
   const indexOf = id => pages.findIndex(p => p.id === id);
   const orderedSelection = () => pages.filter(p => selected.has(p.id));
   const status = message => { $('editorStatus').textContent = message; };
@@ -96,6 +97,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const temporary = document.createElement('canvas');
       await PdfEngine.renderThumbnail(item, temporary, Math.ceil(size.width * scale));
       if (token !== detailsRenderToken || !isDetails()) return;
+      detailsPageWidthPt = size.width;
       canvas.width = width; canvas.height = height;
       canvas.style.width = `${width}px`; canvas.style.height = `${height}px`;
       paper.style.width = `${width}px`; paper.style.height = `${height}px`;
@@ -593,7 +595,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
           for(const point of points.slice(1))ctx.lineTo(px(point.x),py(point.y));
           if(points.length===1){ctx.lineTo(px(points[0].x)+.01,py(points[0].y)+.01);}
           ctx.strokeStyle=color(s.stroke,s.opacity);
-          ctx.lineWidth=Number(s.strokeWidth)*W/600;
+          ctx.lineWidth=Number(s.strokeWidth)*W/size.width;
           ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();ctx.restore();
         }
         continue;
@@ -609,7 +611,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         } else ctx.rect(xx,yy,ww,hh);
         if(Number(s.strokeWidth)>0 && Number(s.opacity)>0) {
           ctx.strokeStyle=color(s.stroke,s.opacity);
-          const strokeWidth=Number(s.strokeWidth)*W/600;
+          const strokeWidth=Number(s.strokeWidth)*W/size.width;
           if(s.type==='Line') {
             ctx.lineWidth=strokeWidth;
             ctx.stroke();
@@ -1371,9 +1373,10 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   textLayer.addEventListener('pointercancel',finishText);
 
 
-  // Shape annotations: geometry uses page-relative percentages, while stroke
-  // thickness is expressed in CSS pixels at 100% page zoom.
+  // Shape geometry is page-relative; stroke widths are stored in PDF points.
+  // Convert points to screen pixels only while rendering the current zoom.
   const shapeLayer = $('shapeLayer');
+  const shapeStrokePixels = item => Math.max(0,Number(item.strokeWidth)||0)*shapeLayer.clientWidth/Math.max(1,detailsPageWidthPt);
   const shapeTools = ['Line', 'Draw', 'Rectangle', 'Ellipse'];
   const currentShape = () => (currentPage()?.shapes || []).find(v => v.id === selectedShapeId && v.type === activeDetailsTool);
   function selectShape(id) {
@@ -1403,12 +1406,12 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       input.className=type==='color'?'form-control form-control-color form-control-sm': 'form-range';
       if(type==='range') {input.min=min;input.max=max;input.step=step;input.style.width='110px';}
       const output=document.createElement('output'); output.className='small text-secondary text-start font-monospace';
-      output.style.width='5ch'; output.textContent=type==='range'?String(options[key])+(key==='strokeWidth'?'px':'%'):'';
+      output.style.width='5ch'; output.textContent=type==='range'?String(options[key])+(key==='strokeWidth'?'pt':'%'):'';
       let saved=false;
       input.addEventListener('input',()=>{
         if(obj&&!saved){recordPageEdit(currentPage());saved=true;}
         (obj||currentShapeDefaults())[key]=type==='range'?Number(input.value):input.value;
-        if(type==='range')output.textContent=input.value+(key==='strokeWidth'?'px':'%');
+        if(type==='range')output.textContent=input.value+(key==='strokeWidth'?'pt':'%');
         renderShapes();updateButtons();
       });
       group.append(name,input,output);content.append(group);
@@ -1463,7 +1466,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         stroke.setAttribute('points',(item.points||[]).map(p=>p.x+','+p.y).join(' '));
         stroke.setAttribute('fill','none');stroke.setAttribute('stroke',item.stroke);
         stroke.setAttribute('stroke-opacity',item.opacity/100);
-        stroke.setAttribute('stroke-width',Math.max(0,Number(item.strokeWidth))*100/Math.max(1,shapeLayer.clientWidth));
+        stroke.setAttribute('stroke-width',shapeStrokePixels(item));
         stroke.setAttribute('stroke-linecap','round');stroke.setAttribute('stroke-linejoin','round');
         stroke.setAttribute('vector-effect','non-scaling-stroke');
         stroke.style.pointerEvents=activeDetailsTool==='Draw'?'stroke':'none';
@@ -1512,12 +1515,11 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         figure.setAttribute('rx','50');figure.setAttribute('ry','50');
       }
       figure.setAttribute('stroke',item.stroke);
-      figure.setAttribute('stroke-width',Math.max(.5,item.strokeWidth)*100/Math.max(10,shapeLayer.clientWidth*item.width/100));
       figure.setAttribute('stroke-opacity',item.opacity/100);
       figure.setAttribute('fill',item.type==='Line'?'none':item.fill);
       figure.setAttribute('fill-opacity',item.type==='Line'?0:item.fillOpacity/100);
       figure.setAttribute('vector-effect','non-scaling-stroke');
-      figure.setAttribute('stroke-width',Math.max(0,item.strokeWidth)*(item.type==='Line'?1:2));
+      figure.setAttribute('stroke-width',shapeStrokePixels(item)*(item.type==='Line'?1:2));
       if(item.type!=='Line') {
         // Paint the entire stroke behind the fill: only the outward half remains.
         figure.setAttribute('paint-order','stroke fill');
@@ -1542,7 +1544,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       box.append(svg);
       if(item.id===selectedShapeId && item.type===activeDetailsTool) {
         if(item.type!=='Line')box.style.outline='1px dashed #0d6efd';
-        if(item.type==='Rectangle'||item.type==='Ellipse') box.style.outlineOffset=Math.max(0,Number(item.strokeWidth)||0)+'px';
+        if(item.type==='Rectangle'||item.type==='Ellipse') box.style.outlineOffset=shapeStrokePixels(item)+'px';
         for(const corner of (item.type==='Line' ? ['line-start','line-end'] : ['nw','ne','sw','se','n','e','s','w'])) {
           const handle=document.createElement('div');handle.dataset.shapeHandle=corner;
           handle.className=item.type==='Line'?'position-absolute bg-primary border border-white rounded-circle':'position-absolute bg-primary';
@@ -1553,7 +1555,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
             handle.style.left=item.width===0?'calc(50% - 6px)':atStart?(item.reverseX?'calc(100% - 6px)':'-6px'):(item.reverseX?'-6px':'calc(100% - 6px)');
             handle.style.cursor='crosshair';
           } else {
-            corner.length===1?styleObjectSideHandle(handle,corner,Math.max(0,Number(item.strokeWidth)||0)):styleObjectCornerHandle(handle,corner,Math.max(0,Number(item.strokeWidth)||0));
+            corner.length===1?styleObjectSideHandle(handle,corner,shapeStrokePixels(item)):styleObjectCornerHandle(handle,corner,shapeStrokePixels(item));
           }
           box.append(handle);
         }
@@ -1589,7 +1591,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
           button.style.top='-12px';
           button.style.transform='none';
           box.append(anchor);
-        }else appendObjectDeleteButton(box,item.type,deleteShape,Math.max(0,Number(item.strokeWidth)||0));
+        }else appendObjectDeleteButton(box,item.type,deleteShape,shapeStrokePixels(item));
       }
       shapeLayer.append(box);
     }
