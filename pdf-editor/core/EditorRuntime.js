@@ -1466,7 +1466,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         stroke.setAttribute('points',(item.points||[]).map(p=>p.x+','+p.y).join(' '));
         stroke.setAttribute('fill','none');stroke.setAttribute('stroke',item.stroke);
         stroke.setAttribute('stroke-opacity',item.opacity/100);
-        stroke.setAttribute('stroke-width',Math.max(0,Number(item.strokeWidth))*100/Math.max(1,shapeLayer.clientWidth/6));
+        stroke.setAttribute('stroke-width',Math.max(0,Number(item.strokeWidth))*100/Math.max(1,shapeLayer.clientWidth));
         stroke.setAttribute('stroke-linecap','round');stroke.setAttribute('stroke-linejoin','round');
         stroke.setAttribute('vector-effect','non-scaling-stroke');
         stroke.style.pointerEvents=activeDetailsTool==='Draw'?'stroke':'none';
@@ -1697,7 +1697,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   function finishShape(e){
     if(!shapeGesture)return;
     const g=shapeGesture;
-    if(e.type==='pointerup'&&g.mode==='create'&&!g.moved){
+    if(e.type==='pointerup'&&g.mode==='create'&&!g.moved&&activeDetailsTool!=='Draw'){
       const item=(currentPage()?.shapes||[]).find(v=>v.id===g.id);
       if(item){const d=clickCreateDimensions(shapeLayer,g.start.x,g.start.y);
         item.x=g.start.x;item.y=g.start.y;item.width=d.width;item.height=item.type==='Line'?0:d.height;
