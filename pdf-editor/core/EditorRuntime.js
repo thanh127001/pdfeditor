@@ -115,10 +115,10 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     selected = new Set([id]); anchor = id; detailsId = id; selectedHighlightId = null; selectedTextId = null; selectedImageId = null; selectedShapeId = null; pendingImage = null;
     activeDetailsTool = null;
     updateDetailsToolSelection();
-    // Each entry into Page Details starts at full width (100%).
-    $('detailsZoom').value = '100';
-    $('detailsZoomButton').textContent = 'Zoom: 100%';
-    document.querySelectorAll('[data-zoom-value]').forEach(item => item.classList.toggle('active', item.dataset.zoomValue === '100'));
+    // Each entry into Page Details starts with the entire page fitted in view.
+    $('detailsZoom').value = 'fit';
+    $('detailsZoomButton').textContent = 'Zoom: Fit';
+    document.querySelectorAll('[data-zoom-value]').forEach(item => item.classList.toggle('active', item.dataset.zoomValue === 'fit'));
     renderList(); setView(true);
   }
   function saveDemoNotes() {
