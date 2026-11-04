@@ -82,9 +82,9 @@
         <div class="col-12"><div id="pageDetailsToolOptionsContent" class="d-flex flex-wrap align-items-center gap-3"></div></div>
       </div>
     </div>
-    <div id="pageDetailsScrollArea" class="flex-grow-1 overflow-auto" style="min-height: 0;">
-    <div id="editorPage" class="bg-body-tertiary rounded p-3 overflow-auto"><div id="detailsPaper" class="mx-auto bg-white shadow rounded overflow-hidden position-relative"><canvas id="detailsCanvas" class="d-block" aria-label="Selected PDF page"></canvas><div id="highlightLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="textLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="imageLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="shapeLayer" class="position-absolute top-0 start-0 w-100 h-100"></div></div></div><textarea id="editorText" class="d-none" aria-hidden="true"></textarea>
-    <p id="detailsNotice" class="small text-secondary mt-2">Highlight supports drawing and editing on the current page. Other tools remain demonstrations.</p>
+    <div id="pageDetailsScrollArea" class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0;">
+    <div id="editorPage" class="bg-body-tertiary rounded p-3 overflow-auto flex-grow-1" style="min-height: 0;"><div id="detailsPaper" class="mx-auto bg-white shadow rounded overflow-hidden position-relative"><canvas id="detailsCanvas" class="d-block" aria-label="Selected PDF page"></canvas><div id="highlightLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="textLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="imageLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="shapeLayer" class="position-absolute top-0 start-0 w-100 h-100"></div></div></div><textarea id="editorText" class="d-none" aria-hidden="true"></textarea>
+    <p id="detailsNotice" class="small text-secondary mt-2 flex-shrink-0">Highlight supports drawing and editing on the current page. Other tools remain demonstrations.</p>
     </div>
     <div id="pageDetailsBottomToolbar" class="bg-body border-top py-2 flex-shrink-0" aria-label="Page Details bottom toolbar">
       <div class="d-flex flex-wrap justify-content-end align-items-center gap-2" style="min-height: 24px;">
