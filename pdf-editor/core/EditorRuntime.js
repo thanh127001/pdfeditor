@@ -146,8 +146,10 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const isSelected = selected.has(id);
       const card = col.querySelector('.page-card');
       if (!draggingIds) card?.classList.remove('opacity-50');
-      card?.classList.toggle('border-primary', isSelected);
-      card?.classList.toggle('border-secondary', !isSelected);
+      if (card) {
+        card.classList.remove('border-primary', 'border-secondary');
+        card.classList.add(isSelected ? 'border-primary' : 'border-secondary');
+      }
       const selectButton = col.querySelector('.thumb-select');
       if (selectButton) {
         selectButton.classList.toggle('active', isSelected);
