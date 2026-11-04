@@ -881,6 +881,31 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const width=o.width*ratio,height=o.height*ratio;
     return {x:west?anchorX-width:anchorX,y:north?anchorY-height:anchorY,width,height};
   }
+  // Resize in the object's rotated local axes, then keep the opposite
+  // corner/edge midpoint fixed in page coordinates (including rotation).
+  function resizePointerDelta(dx,dy,angle,layer){
+    const radians=-(angle||0)*Math.PI/180;
+    const x=dx*layer.clientWidth,y=dy*layer.clientHeight;
+    return {dx:(x*Math.cos(radians)-y*Math.sin(radians))/layer.clientWidth,
+      dy:(x*Math.sin(radians)+y*Math.cos(radians))/layer.clientHeight};
+  }
+  function preserveRotatedResizeAnchor(original,updated,handle,layer){
+    const angle=(original.angle||0)*Math.PI/180;
+    if(!angle)return;
+    const anchorX=handle.includes('w')?1:handle.includes('e')?0:.5;
+    const anchorY=handle.includes('n')?1:handle.includes('s')?0:.5;
+    const rotatedPoint=(box)=>{
+      const cx=(box.x+box.width/2)*layer.clientWidth;
+      const cy=(box.y+box.height/2)*layer.clientHeight;
+      const vx=(anchorX-.5)*box.width*layer.clientWidth;
+      const vy=(anchorY-.5)*box.height*layer.clientHeight;
+      return {x:cx+vx*Math.cos(angle)-vy*Math.sin(angle),
+        y:cy+vx*Math.sin(angle)+vy*Math.cos(angle)};
+    };
+    const before=rotatedPoint(original),after=rotatedPoint(updated);
+    updated.x+=(before.x-after.x)/layer.clientWidth;
+    updated.y+=(before.y-after.y)/layer.clientHeight;
+  }
   function appendObjectDeleteButton(box,label,onDelete,offset=0){
     const b=document.createElement('button');b.type='button';
     b.className='position-absolute d-flex align-items-center justify-content-center bg-white border border-danger rounded-circle text-danger';
@@ -1304,15 +1329,18 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       t.y=Math.max(0,Math.min(100-t.height,g.original.y+dy));
     }else{
       const c=g.corner,o=g.original;
+      const local=resizePointerDelta(dx,dy,o.angle,textLayer);
+      const localDx=local.dx,localDy=local.dy;
       if(c.length>1){
-        Object.assign(t,proportionalCornerResize(o,c,dx,dy,5,3));
+        Object.assign(t,proportionalCornerResize(o,c,localDx,localDy,5,3));
       }else{
       const right=o.x+o.width,bottom=o.y+o.height;
-      if(c.includes('w')){t.x=Math.max(0,Math.min(right-5,o.x+dx));t.width=right-t.x;}
-      else if(c.includes('e')){t.x=o.x;t.width=Math.max(5,Math.min(100-o.x,o.width+dx));}
-      if(c.includes('n')){t.y=Math.max(0,Math.min(bottom-3,o.y+dy));t.height=bottom-t.y;}
-      else if(c.includes('s')){t.y=o.y;t.height=Math.max(3,Math.min(100-o.y,o.height+dy));}
+      if(c.includes('w')){t.x=Math.max(0,Math.min(right-5,o.x+localDx));t.width=right-t.x;}
+      else if(c.includes('e')){t.x=o.x;t.width=Math.max(5,Math.min(100-o.x,o.width+localDx));}
+      if(c.includes('n')){t.y=Math.max(0,Math.min(bottom-3,o.y+localDy));t.height=bottom-t.y;}
+      else if(c.includes('s')){t.y=o.y;t.height=Math.max(3,Math.min(100-o.y,o.height+localDy));}
       }
+      preserveRotatedResizeAnchor(o,t,c,textLayer);
     }
     renderTexts();updateButtons();
   });
@@ -1575,9 +1603,13 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       item.width=Math.abs(ex-sx);item.height=Math.abs(ey-sy);
       item.reverseX=ex<sx;item.reverseY=ey<sy;
     }else if(g.mode.length>1){
-      Object.assign(item,proportionalCornerResize(g.original,g.mode,dx,dy,.2,.2));
+      const local=resizePointerDelta(dx,dy,g.original.angle,shapeLayer);
+      Object.assign(item,proportionalCornerResize(g.original,g.mode,local.dx,local.dy,.2,.2));
+      preserveRotatedResizeAnchor(g.original,item,g.mode,shapeLayer);
     }else{
-      const o=g.original,left=g.mode.includes('w')?o.x+dx:o.x;
+      const o=g.original,local=resizePointerDelta(dx,dy,o.angle,shapeLayer);
+      const dx=local.dx,dy=local.dy;
+      const left=g.mode.includes('w')?o.x+dx:o.x;
       const top=g.mode.includes('n')?o.y+dy:o.y;
       const right=g.mode.includes('e')?o.x+o.width+dx:o.x+o.width;
       const bottom=g.mode.includes('s')?o.y+o.height+dy:o.y+o.height;
@@ -1585,6 +1617,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       item.y=Math.max(0,Math.min(99.8,Math.min(top,bottom)));
       item.width=Math.max(.2,Math.min(100-item.x,Math.abs(right-left)));
       item.height=Math.max(.2,Math.min(100-item.y,Math.abs(bottom-top)));
+      preserveRotatedResizeAnchor(o,item,g.mode,shapeLayer);
 
     }
     renderShapes();updateButtons();
@@ -1756,17 +1789,20 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       obj.y=Math.max(0,Math.min(100-obj.height,g.original.y+dy));
     }else{
       const o=g.original,c=g.corner;
+      const local=resizePointerDelta(dx,dy,o.angle,imageLayer);
+      const localDx=local.dx,localDy=local.dy;
       const anchorX=c.includes('w')?o.x+o.width:o.x;
       const anchorY=c.includes('n')?o.y+o.height:o.y;
       if(c.length>1){
-        Object.assign(obj,proportionalCornerResize(o,c,dx,dy,1,1));
+        Object.assign(obj,proportionalCornerResize(o,c,localDx,localDy,1,1));
       }else{
-        const w=c==='n'||c==='s'?o.width:Math.max(1,Math.min(c==='w'?anchorX:100-anchorX,o.width+(c==='w'?-dx:dx)));
-        const h=c==='w'||c==='e'?o.height:Math.max(1,Math.min(c==='n'?anchorY:100-anchorY,o.height+(c==='n'?-dy:dy)));
+        const w=c==='n'||c==='s'?o.width:Math.max(1,Math.min(c==='w'?anchorX:100-anchorX,o.width+(c==='w'?-localDx:localDx)));
+        const h=c==='w'||c==='e'?o.height:Math.max(1,Math.min(c==='n'?anchorY:100-anchorY,o.height+(c==='n'?-localDy:localDy)));
         obj.x=c==='w'?anchorX-w:anchorX;
         obj.y=c==='n'?anchorY-h:anchorY;
         obj.width=w;obj.height=h;
       }
+      preserveRotatedResizeAnchor(o,obj,c,imageLayer);
     }
     renderImages();updateButtons();
   });
