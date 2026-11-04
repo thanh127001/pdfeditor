@@ -15,9 +15,7 @@
     </div>
   </section>
   <section id="pageListSection" class="pb-4">
-    <div id="emptyState" class="rounded p-5 text-center text-secondary border border-2 border-secondary-subtle">No pages yet. Add a PDF or create a blank page.</div>
-    <div id="pages" class="row row-cols-2 row-cols-sm-3 row-cols-lg-6 g-3" aria-label="PDF pages"></div>
-    <div id="pageListToolbar" class="bg-body border-bottom py-3 mt-3 sticky-bottom">
+    <div id="pageListToolbar" class="bg-body border-bottom py-3 mb-3 sticky-top">
       <div class="row g-2 align-items-center">
         <div class="col-12 col-lg"><div class="d-flex flex-wrap gap-2">
           <button id="addPdf" type="button" class="btn btn-primary"><i class="bi bi-file-earmark-plus me-1"></i>Add PDF</button>
@@ -46,11 +44,11 @@
         </div></div>
       </div>
     </div>
+    <div id="emptyState" class="rounded p-5 text-center text-secondary border border-2 border-secondary-subtle">No pages yet. Add a PDF or create a blank page.</div>
+    <div id="pages" class="row row-cols-2 row-cols-sm-3 row-cols-lg-6 g-3" aria-label="PDF pages"></div>
   </section>
   <section id="pageDetailsSection" class="d-none pb-4">
-    <div id="editorPage" class="bg-body-tertiary rounded p-3 overflow-auto"><div id="detailsPaper" class="mx-auto bg-white shadow rounded overflow-hidden position-relative"><canvas id="detailsCanvas" class="d-block" aria-label="Selected PDF page"></canvas><div id="highlightLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="textLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="imageLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="shapeLayer" class="position-absolute top-0 start-0 w-100 h-100"></div></div></div><textarea id="editorText" class="d-none" aria-hidden="true"></textarea>
-    <p id="detailsNotice" class="small text-secondary mt-2">Highlight supports drawing and editing on the current page. Other tools remain demonstrations.</p>
-    <div id="pageDetailsToolbar" class="bg-body border-bottom py-3 mt-3 sticky-bottom">
+    <div id="pageDetailsToolbar" class="bg-body border-bottom py-3 mb-3 sticky-top">
       <div class="row g-2 align-items-center">
         <div class="col-12 col-lg"><div class="d-flex flex-wrap gap-2 align-items-center">
           <button id="back" type="button" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i>Back to Pages</button>
@@ -96,6 +94,8 @@
         <div class="col-12"><div id="pageDetailsToolOptionsContent" class="d-flex flex-wrap align-items-center gap-3"></div></div>
       </div>
     </div>
+    <div id="editorPage" class="bg-body-tertiary rounded p-3 overflow-auto"><div id="detailsPaper" class="mx-auto bg-white shadow rounded overflow-hidden position-relative"><canvas id="detailsCanvas" class="d-block" aria-label="Selected PDF page"></canvas><div id="highlightLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="textLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="imageLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="shapeLayer" class="position-absolute top-0 start-0 w-100 h-100"></div></div></div><textarea id="editorText" class="d-none" aria-hidden="true"></textarea>
+    <p id="detailsNotice" class="small text-secondary mt-2">Highlight supports drawing and editing on the current page. Other tools remain demonstrations.</p>
   </section>
   <input id="fileInput" type="file" accept=".pdf,application/pdf" multiple hidden>
   <div id="editorStatus" class="small text-secondary" role="status" aria-live="polite"></div>
