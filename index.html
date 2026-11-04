@@ -32,6 +32,12 @@
           <button id="clearAll" type="button" class="btn btn-danger" disabled><i class="bi bi-trash3 me-1"></i>Clear All</button>
         </div></div>
 
+        <div class="col-12 col-lg-auto"><div class="d-flex justify-content-start"><div class="dropdown">
+          <button id="columnsButton" type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-grid-3x3-gap me-1"></i>Columns: 6</button>
+          <ul id="columnsMenu" class="dropdown-menu dropdown-menu-end" aria-labelledby="columnsButton">
+            <li><button type="button" class="dropdown-item" data-columns="1">1 Column</button></li><li><button type="button" class="dropdown-item" data-columns="2">2 Columns</button></li><li><button type="button" class="dropdown-item" data-columns="3">3 Columns</button></li><li><button type="button" class="dropdown-item" data-columns="4">4 Columns</button></li><li><button type="button" class="dropdown-item" data-columns="5">5 Columns</button></li><li><button type="button" class="dropdown-item active" data-columns="6">6 Columns</button></li><li><button type="button" class="dropdown-item" data-columns="7">7 Columns</button></li><li><button type="button" class="dropdown-item" data-columns="8">8 Columns</button></li><li><button type="button" class="dropdown-item" data-columns="9">9 Columns</button></li><li><button type="button" class="dropdown-item" data-columns="10">10 Columns</button></li><li><button type="button" class="dropdown-item" data-columns="11">11 Columns</button></li><li><button type="button" class="dropdown-item" data-columns="12">12 Columns</button></li>
+          </ul>
+        </div></div></div>
       </div>
       <div class="row g-2 align-items-center mt-1">
         <div class="col-12 col-lg"><div class="d-flex flex-wrap gap-2">
@@ -53,16 +59,6 @@
     <div id="pages" class="row row-cols-2 row-cols-sm-3 row-cols-lg-6 g-3" aria-label="PDF pages"></div>
     </div>
     </div>
-    <div id="pageListBottomToolbar" class="bg-body border-top py-2 flex-shrink-0" aria-label="Page List bottom toolbar">
-      <div class="d-flex flex-wrap justify-content-start align-items-center gap-2" style="min-height: 24px;">
-        <div class="col-12 col-lg-auto"><div class="d-flex justify-content-start"><div class="dropdown">
-          <button id="columnsButton" type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-grid-3x3-gap me-1"></i>Columns: 6</button>
-          <ul id="columnsMenu" class="dropdown-menu dropdown-menu-end" aria-labelledby="columnsButton">
-            <li><button type="button" class="dropdown-item" data-columns="1">1 Column</button></li><li><button type="button" class="dropdown-item" data-columns="2">2 Columns</button></li><li><button type="button" class="dropdown-item" data-columns="3">3 Columns</button></li><li><button type="button" class="dropdown-item" data-columns="4">4 Columns</button></li><li><button type="button" class="dropdown-item" data-columns="5">5 Columns</button></li><li><button type="button" class="dropdown-item active" data-columns="6">6 Columns</button></li><li><button type="button" class="dropdown-item" data-columns="7">7 Columns</button></li><li><button type="button" class="dropdown-item" data-columns="8">8 Columns</button></li><li><button type="button" class="dropdown-item" data-columns="9">9 Columns</button></li><li><button type="button" class="dropdown-item" data-columns="10">10 Columns</button></li><li><button type="button" class="dropdown-item" data-columns="11">11 Columns</button></li><li><button type="button" class="dropdown-item" data-columns="12">12 Columns</button></li>
-          </ul>
-        </div></div></div>
-      </div>
-    </div>
   </section>
   <section id="pageDetailsSection" class="d-none d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0;">
     <div id="pageDetailsToolbar" class="bg-body border-bottom py-3 flex-shrink-0">
@@ -71,31 +67,6 @@
           <button id="back" type="button" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i>Back to Pages</button>
         </div></div>
 
-      </div>
-      <div id="pageDetailsDrawingTools" class="row g-2 align-items-center mt-1">
-        <div class="col-12 col-lg"><div class="d-flex flex-wrap gap-2">
-          <button id="toolHold" type="button" class="btn btn-primary" aria-pressed="true" title="Hold and drag to move the page"><i class="bi bi-hand-index-thumb me-1"></i>Hold</button>
-          <button id="toolPageSize" type="button" class="btn btn-outline-primary" data-demo-tool="PageSize"><i class="bi bi-aspect-ratio me-1"></i>Page Size</button>
-          <button id="toolHighlight" type="button" class="btn btn-outline-primary" data-demo-tool="Highlight"><i class="bi bi-highlighter me-1"></i>Highlight</button>
-          <button id="toolAddText" type="button" class="btn btn-outline-primary" data-demo-tool="Text"><i class="bi bi-fonts me-1"></i>Text</button>
-          <button id="toolImage" type="button" class="btn btn-outline-primary" data-demo-tool="Image"><i class="bi bi-image me-1"></i>Image</button>
-          <button id="toolDrawLine" type="button" class="btn btn-outline-primary" data-demo-tool="Line"><i class="bi bi-slash-lg me-1"></i>Line</button>
-          <button id="toolRectangle" type="button" class="btn btn-outline-primary" data-demo-tool="Rectangle"><i class="bi bi-square me-1"></i>Rectangle</button>
-          <button id="toolEllipse" type="button" class="btn btn-outline-primary" data-demo-tool="Ellipse"><i class="bi bi-circle me-1"></i>Ellipse</button>
-        </div></div>
-        <div class="col-12 col-lg-auto"><div class="d-flex flex-wrap justify-content-lg-end gap-2">
-          <button id="undoBtnDetails" type="button" class="btn btn-outline-secondary" disabled><i class="bi bi-arrow-counterclockwise me-1"></i>Undo</button>
-        </div></div>
-      </div>
-      <div id="pageDetailsToolOptions" class="row g-2 align-items-center mt-1 d-none" aria-live="polite">
-        <div class="col-12"><div id="pageDetailsToolOptionsContent" class="d-flex flex-wrap align-items-center gap-3"></div></div>
-      </div>
-    </div>
-    <div id="pageDetailsScrollArea" class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0;">
-    <div id="editorPage" class="bg-body-tertiary rounded my-3 p-3 overflow-auto flex-grow-1" style="min-height: 0;"><div id="detailsPaper" class="mx-auto bg-white shadow rounded overflow-hidden position-relative"><canvas id="detailsCanvas" class="d-block" aria-label="Selected PDF page"></canvas><div id="highlightLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="textLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="imageLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="shapeLayer" class="position-absolute top-0 start-0 w-100 h-100"></div></div></div><textarea id="editorText" class="d-none" aria-hidden="true"></textarea>
-    </div>
-    <div id="pageDetailsBottomToolbar" class="bg-body border-top py-2 flex-shrink-0" aria-label="Page Details bottom toolbar">
-      <div class="d-flex flex-wrap justify-content-start align-items-center gap-2" style="min-height: 24px;">
         <div class="col-12 col-lg-auto"><div class="d-flex flex-wrap justify-content-start gap-2 align-items-center">
           <span id="pagePosition" class="small text-secondary" aria-live="polite">Page 1 / 1</span>
           <button id="previous" type="button" class="btn btn-primary" aria-label="Previous page"><i class="bi bi-chevron-left"></i></button>
@@ -119,6 +90,27 @@
           </div>
         </div></div>
       </div>
+      <div id="pageDetailsDrawingTools" class="row g-2 align-items-center mt-1">
+        <div class="col-12 col-lg"><div class="d-flex flex-wrap gap-2">
+          <button id="toolHold" type="button" class="btn btn-primary" aria-pressed="true" title="Hold and drag to move the page"><i class="bi bi-hand-index-thumb me-1"></i>Hold</button>
+          <button id="toolPageSize" type="button" class="btn btn-outline-primary" data-demo-tool="PageSize"><i class="bi bi-aspect-ratio me-1"></i>Page Size</button>
+          <button id="toolHighlight" type="button" class="btn btn-outline-primary" data-demo-tool="Highlight"><i class="bi bi-highlighter me-1"></i>Highlight</button>
+          <button id="toolAddText" type="button" class="btn btn-outline-primary" data-demo-tool="Text"><i class="bi bi-fonts me-1"></i>Text</button>
+          <button id="toolImage" type="button" class="btn btn-outline-primary" data-demo-tool="Image"><i class="bi bi-image me-1"></i>Image</button>
+          <button id="toolDrawLine" type="button" class="btn btn-outline-primary" data-demo-tool="Line"><i class="bi bi-slash-lg me-1"></i>Line</button>
+          <button id="toolRectangle" type="button" class="btn btn-outline-primary" data-demo-tool="Rectangle"><i class="bi bi-square me-1"></i>Rectangle</button>
+          <button id="toolEllipse" type="button" class="btn btn-outline-primary" data-demo-tool="Ellipse"><i class="bi bi-circle me-1"></i>Ellipse</button>
+        </div></div>
+        <div class="col-12 col-lg-auto"><div class="d-flex flex-wrap justify-content-lg-end gap-2">
+          <button id="undoBtnDetails" type="button" class="btn btn-outline-secondary" disabled><i class="bi bi-arrow-counterclockwise me-1"></i>Undo</button>
+        </div></div>
+      </div>
+      <div id="pageDetailsToolOptions" class="row g-2 align-items-center mt-1 d-none" aria-live="polite">
+        <div class="col-12"><div id="pageDetailsToolOptionsContent" class="d-flex flex-wrap align-items-center gap-3"></div></div>
+      </div>
+    </div>
+    <div id="pageDetailsScrollArea" class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0;">
+    <div id="editorPage" class="bg-body-tertiary rounded my-3 p-3 overflow-auto flex-grow-1" style="min-height: 0;"><div id="detailsPaper" class="mx-auto bg-white shadow rounded overflow-hidden position-relative"><canvas id="detailsCanvas" class="d-block" aria-label="Selected PDF page"></canvas><div id="highlightLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="textLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="imageLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="shapeLayer" class="position-absolute top-0 start-0 w-100 h-100"></div></div></div><textarea id="editorText" class="d-none" aria-hidden="true"></textarea>
     </div>
   </section>
   <input id="fileInput" type="file" accept=".pdf,application/pdf" multiple hidden>
