@@ -23,6 +23,7 @@ export class PdfEditor {
   this.pageManager=new PageManager(this.events,this.state);
   this.commandManager=new CommandManager(this.events);
   for(const Tool of [TextTool,ImageTool,HighlightTool,LineTool,RectangleTool,EllipseTool]) this.toolManager.register(new Tool());
+  this.toolManager.register({name:'Draw'});
  }
  initialize(){ initializeEditorRuntime(this,PdfEngine); }
 }
