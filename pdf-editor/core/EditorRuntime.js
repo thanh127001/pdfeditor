@@ -125,9 +125,9 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const item = pages[indexOf(detailsId)];
     if (item) item.demoNotes = $('editorText').value; // UI demo only; never used by PdfEngine.
   }
-  function choose(id, checkbox = false) {
-    if (checkbox) {
-      // Checkboxes allow multi-selection without keyboard modifiers.
+  function choose(id, multi = false) {
+    if (multi) {
+      // The selection button toggles multi-selection without keyboard modifiers.
       if (selected.has(id)) selected.delete(id); else selected.add(id);
       anchor = id;
     } else if (selected.size === 1 && selected.has(id)) {
@@ -138,7 +138,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     }
     updateSelectionUI();
   }
-  // Update only selection styling and checkbox states. Keep thumbnails and scroll intact.
+  // Update only selection styling and selection buttons. Keep thumbnails and scroll intact.
   function updateSelectionUI() {
     const grid = $('pages');
     for (const col of grid.children) {
@@ -149,8 +149,13 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       card?.classList.toggle('border-primary', isSelected);
       card?.classList.toggle('border-3', isSelected);
       card?.classList.toggle('shadow-sm', isSelected);
-      const checkbox = col.querySelector('.thumb-select');
-      if (checkbox) checkbox.checked = isSelected;
+      const selectButton = col.querySelector('.thumb-select');
+      if (selectButton) {
+        selectButton.classList.toggle('active', isSelected);
+        selectButton.setAttribute('aria-pressed', String(isSelected));
+        selectButton.setAttribute('aria-label', `${isSelected ? 'Remove page from' : 'Add page to'} multi-selection`);
+        selectButton.innerHTML = `<i class="bi bi-${isSelected ? 'check-square-fill' : 'check-square'}"></i>`;
+      }
     }
     updateButtons();
   }
@@ -285,10 +290,14 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const actions = document.createElement('div'); actions.className = 'position-absolute top-0 start-0 w-100 h-100 pe-none d-flex flex-column justify-content-between p-2 gap-2';
       const topActions = document.createElement('div'); topActions.className = 'd-flex flex-wrap align-items-start justify-content-between gap-2';
       const bottomActions = document.createElement('div'); bottomActions.className = 'd-flex flex-wrap align-items-end justify-content-between gap-2';
-      const check = document.createElement('input'); check.type = 'checkbox'; check.className = 'thumb-select form-check-input m-0 pe-none fs-5'; check.id = `pageCheck_${item.id}`; check.checked = selected.has(item.id); check.setAttribute('aria-label', `Select page ${i + 1}`);
-      const checkHitbox = document.createElement('label'); checkHitbox.className = 'd-flex align-items-center justify-content-center p-2 pe-auto bg-white bg-opacity-75 rounded'; checkHitbox.id = `pageCheckHitbox_${item.id}`; checkHitbox.htmlFor = check.id; checkHitbox.append(check);
-      checkHitbox.addEventListener('click', e => { e.stopPropagation(); if (!busy) choose(item.id, true); e.preventDefault(); });
-      checkHitbox.addEventListener('dragstart', e => e.preventDefault());
+      const selectButton = document.createElement('button'); selectButton.type = 'button';
+      selectButton.className = `thumb-select btn btn-sm btn-primary pe-auto ${selected.has(item.id) ? 'active' : ''}`;
+      selectButton.id = `pageSelect_${item.id}`;
+      selectButton.innerHTML = `<i class="bi bi-${selected.has(item.id) ? 'check-square-fill' : 'check-square'}"></i>`;
+      selectButton.setAttribute('aria-label', `${selected.has(item.id) ? 'Remove page from' : 'Add page to'} multi-selection`);
+      selectButton.setAttribute('aria-pressed', String(selected.has(item.id)));
+      selectButton.addEventListener('click', e => { e.stopPropagation(); if (!busy) choose(item.id, true); });
+      selectButton.addEventListener('dragstart', e => e.preventDefault());
       const details = document.createElement('button'); details.type = 'button'; details.id = `pageDetails_${item.id}`;
       details.className = 'btn btn-sm btn-primary pe-auto'; details.innerHTML = '<i class="bi bi-zoom-in me-1"></i>Details';
       details.addEventListener('click', e => { e.stopPropagation(); openDetails(item.id); });
@@ -308,7 +317,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       pageLabel.className = 'badge bg-info';
       pageLabel.textContent = `Page ${i + 1}`;
       topActions.append(sizeLabel, details);
-      bottomActions.append(pageLabel, checkHitbox);
+      bottomActions.append(pageLabel, selectButton);
       actions.append(topActions, bottomActions); card.append(thumb, actions);
       col.append(card); grid.append(col);
       // Selection is changed on click, not pointerdown, so an unselected card can
