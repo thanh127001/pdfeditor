@@ -291,13 +291,13 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       checkHitbox.addEventListener('click', e => { e.stopPropagation(); if (!busy) choose(item.id, true); e.preventDefault(); });
       checkHitbox.addEventListener('dragstart', e => e.preventDefault());
       const details = document.createElement('button'); details.type = 'button'; details.id = `pageDetails_${item.id}`;
-      details.className = 'btn btn-sm btn-outline-primary bg-white position-absolute top-0 end-0 m-2 pe-auto'; details.innerHTML = '<i class="bi bi-zoom-in me-1"></i>Details';
+      details.className = 'btn btn-sm btn-primary position-absolute top-0 end-0 m-2 pe-auto'; details.innerHTML = '<i class="bi bi-zoom-in me-1"></i>Details';
       details.style.setProperty('--bs-btn-hover-color', 'var(--bs-btn-color)');
       details.style.setProperty('--bs-btn-hover-bg', 'var(--bs-btn-bg)');
       details.style.setProperty('--bs-btn-hover-border-color', 'var(--bs-btn-border-color)');
       details.addEventListener('click', e => { e.stopPropagation(); openDetails(item.id); });
       const sizeLabel = document.createElement('div');
-      sizeLabel.className = 'position-absolute top-0 start-0 m-2 px-2 py-1 small text-body-secondary bg-white bg-opacity-75 rounded';
+      sizeLabel.className = 'badge bg-primary position-absolute top-0 start-0 m-2';
       sizeLabel.textContent = '…';
       sizeLabel.title = 'Page size';
       void PdfEngine.getPageSize(item).then(size => {
