@@ -86,7 +86,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       if (token !== detailsRenderToken || !isDetails()) return;
       const zoomValue = $('detailsZoom').value;
       const availableWidth = Math.max(120, container.clientWidth - 32);
-      const availableHeight = Math.max(200, window.innerHeight - $('pageDetailsToolbar').getBoundingClientRect().bottom - 80);
+      const availableHeight = Math.max(1, $('pageDetailsScrollArea').clientHeight - 32);
       // 100% fills the available width; other percentages scale relative to it.
       const fullWidthScale = availableWidth / size.width;
       const scale = zoomValue === 'fit'
@@ -1737,11 +1737,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   function finishImage(e){if(!imageGesture)return;imageGesture=null;if(imageLayer.hasPointerCapture(e.pointerId))imageLayer.releasePointerCapture(e.pointerId);renderImageOptions();}
   imageLayer.addEventListener('pointerup',finishImage);imageLayer.addEventListener('pointercancel',finishImage);
 
-  function measureTitle() {
-    const height = $('pdfEditorTitle').getBoundingClientRect().height;
-    $('pageListToolbar').style.top = `${height}px`;
-    $('pageDetailsToolbar').style.top = `${height}px`;
-  }
+
   document.querySelectorAll('[data-zoom-value]').forEach(button => button.addEventListener('click', () => {
     const zoom = $('detailsZoom');
     zoom.value = button.dataset.zoomValue;
@@ -1798,7 +1794,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   });
   $('detailsZoom').addEventListener('change', () => { if (isDetails()) void renderDetailsPage(); });
   window.addEventListener('resize', () => { if (isDetails()) void renderDetailsPage(); });
-  new ResizeObserver(measureTitle).observe($('pdfEditorTitle')); measureTitle();
+
   renderList();
 
 }
