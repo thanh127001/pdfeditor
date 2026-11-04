@@ -867,6 +867,20 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     handle.style.zIndex='5';handle.style.touchAction='none';
     handle.style.cursor=(side==='w'||side==='e')?'ew-resize':'ns-resize';
   }
+  // Corner handles resize proportionally from the opposite corner.
+  // Side handles are handled separately and change only one dimension.
+  function proportionalCornerResize(o,corner,dx,dy,minW,minH){
+    const west=corner.includes('w'),north=corner.includes('n');
+    const anchorX=west?o.x+o.width:o.x,anchorY=north?o.y+o.height:o.y;
+    const changeW=(west?-dx:dx)/o.width;
+    const changeH=(north?-dy:dy)/o.height;
+    const ratio=Math.max(minW/o.width,minH/o.height,
+      Math.min(1+(Math.abs(changeW)>=Math.abs(changeH)?changeW:changeH),
+        (west?anchorX:100-anchorX)/o.width,
+        (north?anchorY:100-anchorY)/o.height));
+    const width=o.width*ratio,height=o.height*ratio;
+    return {x:west?anchorX-width:anchorX,y:north?anchorY-height:anchorY,width,height};
+  }
   function appendObjectDeleteButton(box,label,onDelete,offset=0){
     const b=document.createElement('button');b.type='button';
     b.className='position-absolute d-flex align-items-center justify-content-center bg-white border border-danger rounded-circle text-danger';
@@ -1290,11 +1304,15 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       t.y=Math.max(0,Math.min(100-t.height,g.original.y+dy));
     }else{
       const c=g.corner,o=g.original;
+      if(c.length>1){
+        Object.assign(t,proportionalCornerResize(o,c,dx,dy,5,3));
+      }else{
       const right=o.x+o.width,bottom=o.y+o.height;
       if(c.includes('w')){t.x=Math.max(0,Math.min(right-5,o.x+dx));t.width=right-t.x;}
       else if(c.includes('e')){t.x=o.x;t.width=Math.max(5,Math.min(100-o.x,o.width+dx));}
       if(c.includes('n')){t.y=Math.max(0,Math.min(bottom-3,o.y+dy));t.height=bottom-t.y;}
       else if(c.includes('s')){t.y=o.y;t.height=Math.max(3,Math.min(100-o.y,o.height+dy));}
+      }
     }
     renderTexts();updateButtons();
   });
@@ -1556,6 +1574,8 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       item.x=Math.min(sx,ex);item.y=Math.min(sy,ey);
       item.width=Math.abs(ex-sx);item.height=Math.abs(ey-sy);
       item.reverseX=ex<sx;item.reverseY=ey<sy;
+    }else if(g.mode.length>1){
+      Object.assign(item,proportionalCornerResize(g.original,g.mode,dx,dy,.2,.2));
     }else{
       const o=g.original,left=g.mode.includes('w')?o.x+dx:o.x;
       const top=g.mode.includes('n')?o.y+dy:o.y;
@@ -1565,17 +1585,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       item.y=Math.max(0,Math.min(99.8,Math.min(top,bottom)));
       item.width=Math.max(.2,Math.min(100-item.x,Math.abs(right-left)));
       item.height=Math.max(.2,Math.min(100-item.y,Math.abs(bottom-top)));
-      if(g.mode.length>1 && ((item.type==='Rectangle'&&item.square)||(item.type==='Ellipse'&&item.circle))){
-        const r=shapeLayer.getBoundingClientRect(),factor=r.width/Math.max(1,r.height);
-        const oppositeX=g.mode.includes('w')?o.x+o.width:o.x;
-        const oppositeY=g.mode.includes('n')?o.y+o.height:o.y;
-        const desiredW=item.width;
-        const w=Math.max(.2,Math.min(desiredW,g.mode.includes('w')?oppositeX:100-oppositeX,
-          (g.mode.includes('n')?oppositeY:100-oppositeY)/factor));
-        item.width=w;item.height=w*factor;
-        item.x=g.mode.includes('w')?oppositeX-w:oppositeX;
-        item.y=g.mode.includes('n')?oppositeY-item.height:oppositeY;
-      }
+
     }
     renderShapes();updateButtons();
   });
@@ -1748,19 +1758,15 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const o=g.original,c=g.corner;
       const anchorX=c.includes('w')?o.x+o.width:o.x;
       const anchorY=c.includes('n')?o.y+o.height:o.y;
-      let w=c==='n'||c==='s'?o.width:Math.max(1,o.width+(c.includes('w')?-dx:dx));
-      let h=c==='w'||c==='e'?o.height:Math.max(1,o.height+(c.includes('n')?-dy:dy));
       if(c.length>1){
-        if(Math.abs(dx)>=Math.abs(dy*o.aspectPage))h=w/o.aspectPage;
-        else w=h*o.aspectPage;
+        Object.assign(obj,proportionalCornerResize(o,c,dx,dy,1,1));
+      }else{
+        const w=c==='n'||c==='s'?o.width:Math.max(1,Math.min(c==='w'?anchorX:100-anchorX,o.width+(c==='w'?-dx:dx)));
+        const h=c==='w'||c==='e'?o.height:Math.max(1,Math.min(c==='n'?anchorY:100-anchorY,o.height+(c==='n'?-dy:dy)));
+        obj.x=c==='w'?anchorX-w:anchorX;
+        obj.y=c==='n'?anchorY-h:anchorY;
+        obj.width=w;obj.height=h;
       }
-      const maxW=c.includes('w')?anchorX:100-anchorX;
-      const maxH=c.includes('n')?anchorY:100-anchorY;
-      const factor=Math.min(1,maxW/w,maxH/h);
-      w=Math.max(1,w*factor);h=Math.max(1,h*factor);
-      obj.x=c.includes('w')?anchorX-w:anchorX;
-      obj.y=c.includes('n')?anchorY-h:anchorY;
-      obj.width=w;obj.height=h;
     }
     renderImages();updateButtons();
   });
