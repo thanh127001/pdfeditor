@@ -14,10 +14,10 @@
 }
 </style>
 </head>
-<body>
-<section class="container-fluid d-flex flex-column overflow-hidden" id="pdfEditorApp" style="height: 100dvh;">
-  <section id="pdfEditorTitle" class="bg-body border-bottom py-3 flex-shrink-0">
-    <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+<body class="d-flex flex-column overflow-hidden" style="height: 100dvh;">
+<header id="pdfEditorTitle" class="container-fluid bg-body border-bottom py-3 flex-shrink-0">
+    <nav class="navbar p-0" aria-label="PDF Editor navigation">
+    <div class="container-fluid px-0 d-flex justify-content-between align-items-center gap-2 flex-wrap">
       <div class="d-flex align-items-center gap-2">
         <div class="dropdown">
           <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Navigate to another app" title="Navigate to another app"><i class="bi bi-grid"></i></button>
@@ -26,11 +26,13 @@
             <li><a class="dropdown-item" href="/image-editor"><i class="bi bi-image me-2"></i>Image Editor</a></li>
           </ul>
         </div>
-        <i class="bi bi-file-earmark-pdf fs-3 text-danger"></i><h1 class="h3 mb-0">PDF Editor</h1>
+        <a class="navbar-brand d-flex align-items-center gap-2 mb-0" href="/" aria-label="PDF Editor home"><i class="bi bi-file-earmark-pdf fs-3 text-danger"></i><span class="h3 mb-0">PDF Editor</span></a>
       </div>
       <input id="exportFileName" class="form-control form-control-sm w-auto" type="text" placeholder="File Name" aria-label="File Name" value="Untitled Document" maxlength="200">
     </div>
-  </section>
+    </nav>
+</header>
+<main id="pdfEditorApp" class="container-fluid d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0;">
   <section id="pageListSection" class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0;">
     <div id="pageListToolbar" class="bg-body border-bottom py-3 flex-shrink-0">
       <div class="row g-2 align-items-center">
@@ -121,9 +123,9 @@
     <div id="editorPage" class="bg-body-tertiary rounded my-3 p-3 overflow-auto flex-grow-1" style="min-height: 0;"><div id="detailsPaper" class="mx-auto bg-white shadow rounded overflow-hidden position-relative"><canvas id="detailsCanvas" class="d-block" aria-label="Selected PDF page"></canvas><div id="highlightLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="textLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="imageLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="shapeLayer" class="position-absolute top-0 start-0 w-100 h-100"></div></div></div><textarea id="editorText" class="d-none" aria-hidden="true"></textarea>
     </div>
   </section>
-  <input id="fileInput" type="file" accept=".pdf,application/pdf" multiple hidden>
-  <div id="editorStatus" class="small text-secondary" role="status" aria-live="polite"></div>
-</section>
+</main>
+<input id="fileInput" type="file" accept=".pdf,application/pdf" multiple hidden>
+<div id="editorStatus" class="small text-secondary" role="status" aria-live="polite"></div>
 <div id="clearAllModal" class="modal fade" tabindex="-1" aria-labelledby="clearAllModalLabel"><div class="modal-dialog"><div class="modal-content">
   <div class="modal-header"><h2 id="clearAllModalLabel" class="modal-title fs-5">Clear All Pages?</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
   <div class="modal-body">Are you sure you want to remove all pages? This action cannot be undone. Undo history will also be deleted.</div>
