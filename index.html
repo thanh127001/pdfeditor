@@ -11,14 +11,6 @@
 #pdfEditorTitle .navbar { min-height: 100%; }
 @media (max-width: 575.98px) { :root { --pdf-editor-header-height: 120px; } }
 
-/* Keep sticky controls aligned with the viewport while the document scrolls horizontally. */
-#pdfEditorTitle,
-#pageListToolbar,
-#pageDetailsToolbar {
-  width: 100vw;
-  box-sizing: border-box;
-}
-
 @media (min-width: 992px) {
   #pages.pdf-columns-extended > .col {
     flex: 0 0 auto;
@@ -198,32 +190,6 @@
   if (media.addEventListener) media.addEventListener('change', applyTheme);
   else if (media.addListener) media.addListener(applyTheme);
   applyTheme();
-})();
-</script>
-
-<script>
-(() => {
-  const stickyElements = [
-    document.getElementById('pdfEditorTitle'),
-    document.getElementById('pageListToolbar'),
-    document.getElementById('pageDetailsToolbar')
-  ];
-  let scheduled = false;
-  function syncHorizontalPosition() {
-    scheduled = false;
-    const offset = window.scrollX;
-    for (const element of stickyElements) {
-      if (element) element.style.transform = `translateX(${offset}px)`;
-    }
-  }
-  function requestSync() {
-    if (scheduled) return;
-    scheduled = true;
-    requestAnimationFrame(syncHorizontalPosition);
-  }
-  window.addEventListener('scroll', requestSync, { passive: true });
-  window.addEventListener('resize', requestSync);
-  syncHorizontalPosition();
 })();
 </script>
 
