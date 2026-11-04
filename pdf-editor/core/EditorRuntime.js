@@ -590,7 +590,10 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       if(s.type==='Draw'){
         const points=s.points||[];
         if(points.length && Number(s.strokeWidth)>0 && Number(s.opacity)>0){
-          ctx.save();ctx.beginPath();
+          ctx.save();
+          const cx=px(s.x+s.width/2),cy=py(s.y+s.height/2);
+          ctx.translate(cx,cy);ctx.rotate((s.angle||0)*Math.PI/180);ctx.translate(-cx,-cy);
+          ctx.beginPath();
           ctx.moveTo(px(points[0].x),py(points[0].y));
           for(const point of points.slice(1))ctx.lineTo(px(point.x),py(point.y));
           if(points.length===1){ctx.lineTo(px(points[0].x)+.01,py(points[0].y)+.01);}
@@ -782,6 +785,28 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   }));
   updateDetailsToolSelection();
 
+  function drawBounds(points){
+    if(!points?.length)return {x:0,y:0,width:.2,height:.2};
+    const xs=points.map(p=>p.x),ys=points.map(p=>p.y),x=Math.min(...xs),y=Math.min(...ys);
+    return {x,y,width:Math.max(.2,Math.max(...xs)-x),height:Math.max(.2,Math.max(...ys)-y)};
+  }
+  function drawHit(item,clientX,clientY){
+    const pts=item.points||[],r=$('shapeLayer').getBoundingClientRect();
+    const cx=(item.x+item.width/2)*r.width/100,cy=(item.y+item.height/2)*r.height/100;
+    const a=(item.angle||0)*Math.PI/180;
+    const point=p=>{
+      const dx=p.x*r.width/100-cx,dy=p.y*r.height/100-cy;
+      return {x:r.left+cx+dx*Math.cos(a)-dy*Math.sin(a),
+        y:r.top+cy+dx*Math.sin(a)+dy*Math.cos(a)};
+    };
+    const tolerance=Math.max(6,(Number(item.strokeWidth)||0)*r.width/Math.max(1,detailsPageWidthPt)/2+4);
+    for(let i=0;i<pts.length;i++){
+      const p=point(pts[i]),q=point(pts[Math.min(i+1,pts.length-1)]);
+      const vx=q.x-p.x,vy=q.y-p.y,t=Math.max(0,Math.min(1,((clientX-p.x)*vx+(clientY-p.y)*vy)/(vx*vx+vy*vy||1)));
+      if(Math.hypot(clientX-p.x-t*vx,clientY-p.y-t*vy)<=tolerance)return true;
+    }
+    return false;
+  }
   // Automatically activate the matching tool when an existing annotation is clicked.
   // This runs in capture phase, before a different drawing tool can create an object.
   $('detailsPaper').addEventListener('pointerdown', e => {
@@ -800,8 +825,12 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     for (const [layerId, selector, key, typeFor] of candidates) {
       const nodes = [...$(layerId).querySelectorAll(selector)].reverse();
       for (const node of nodes) {
-        if (!inside(node.getBoundingClientRect())) continue;
         const type = typeFor(node.dataset[key]);
+        if(type==='Draw'){
+          const draw=(page.shapes||[]).find(v=>v.id===node.dataset[key]);
+          const handle=e.target.closest('[data-shape-handle]')?.closest('[data-shape-id]')===node;
+          if(!draw||(!handle&&!drawHit(draw,x,y)))continue;
+        }else if (!inside(node.getBoundingClientRect())) continue;
         if (!type) continue;
         match = {type, id: node.dataset[key]};
         break;
@@ -1456,34 +1485,38 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const NS='http://www.w3.org/2000/svg';
     for(const item of currentPage()?.shapes||[]) {
       if(item.type==='Draw'){
-        const box=document.createElement('div');box.className='position-absolute top-0 start-0 w-100 h-100';
+        const box=document.createElement('div');box.className='position-absolute';
         box.dataset.shapeId=item.id;
-        box.style.pointerEvents=activeDetailsTool==='Draw'?'none':'none';
+        box.style.cssText='left:'+item.x+'%;top:'+item.y+'%;width:'+Math.max(.2,item.width)+'%;height:'+Math.max(.2,item.height)+'%;overflow:visible;touch-action:none;cursor:move;transform:rotate('+(item.angle||0)+'deg)';
+        box.style.pointerEvents=activeDetailsTool==='Draw'?'auto':'none';
         const svg=document.createElementNS(NS,'svg');
         svg.setAttribute('viewBox','0 0 100 100');svg.setAttribute('preserveAspectRatio','none');
         svg.style.cssText='width:100%;height:100%;overflow:visible;pointer-events:none';
         const stroke=document.createElementNS(NS,'polyline');
-        stroke.setAttribute('points',(item.points||[]).map(p=>p.x+','+p.y).join(' '));
+        stroke.setAttribute('points',(item.points||[]).map(p=>((p.x-item.x)/Math.max(.2,item.width)*100)+','+((p.y-item.y)/Math.max(.2,item.height)*100)).join(' '));
         stroke.setAttribute('fill','none');stroke.setAttribute('stroke',item.stroke);
         stroke.setAttribute('stroke-opacity',item.opacity/100);
         stroke.setAttribute('stroke-width',shapeStrokePixels(item));
         stroke.setAttribute('stroke-linecap','round');stroke.setAttribute('stroke-linejoin','round');
         stroke.setAttribute('vector-effect','non-scaling-stroke');
-        stroke.style.pointerEvents=activeDetailsTool==='Draw'?'stroke':'none';
-        stroke.style.cursor='move';
-        box.append(svg);svg.append(stroke);
+        svg.append(stroke);box.append(svg);
         if(item.id===selectedShapeId&&activeDetailsTool==='Draw'){
-          const points=item.points||[],last=points[points.length-1];
-          if(last){
-            const anchor=document.createElement('div');anchor.className='position-absolute';
-            anchor.style.cssText='left:'+last.x+'%;top:'+last.y+'%;width:0;height:0;pointer-events:auto';
-            appendObjectDeleteButton(anchor,'Draw',()=>{
-              recordPageEdit(currentPage());
-              currentPage().shapes=currentPage().shapes.filter(v=>v.id!==item.id);
-              selectedShapeId=null;renderShapeOptions();renderShapes();updateButtons();
-            });
-            box.append(anchor);
+          box.style.outline='1px dashed #0d6efd';
+          for(const corner of ['nw','ne','sw','se','n','e','s','w']){
+            const handle=document.createElement('div');
+            handle.dataset.shapeHandle=corner;handle.className='position-absolute bg-primary';
+            corner.length===1?styleObjectSideHandle(handle,corner):styleObjectCornerHandle(handle,corner);
+            box.append(handle);
           }
+          const rotate=document.createElement('div');rotate.dataset.shapeHandle='rotate';
+          rotate.className='position-absolute bg-primary border border-white rounded-circle';
+          rotate.style.cssText='width:14px;height:14px;left:50%;top:-28px;transform:translateX(-50%);cursor:grab;touch-action:none';
+          box.append(rotate);
+          appendObjectDeleteButton(box,'Draw',()=>{
+            recordPageEdit(currentPage());
+            currentPage().shapes=currentPage().shapes.filter(v=>v.id!==item.id);
+            selectedShapeId=null;renderShapeOptions();renderShapes();updateButtons();
+          });
         }
         shapeLayer.append(box);continue;
       }
@@ -1605,13 +1638,16 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     if(hit){
       selectedShapeId=hit.dataset.shapeId;item=currentShape();
       mode=e.target.closest('[data-shape-handle]')?.dataset.shapeHandle||'move';
+      if(item.type==='Draw'&&mode==='move'&&!drawHit(item,e.clientX,e.clientY)){
+        selectedShapeId=null;renderShapeOptions();renderShapes();return;
+      }
     } else if(selectedShapeId){
       selectedShapeId=null;renderShapeOptions();renderShapes();return;
     } else {
       recordPageEdit(page);
       item={id:'shape-'+(++shapeCounter),type:activeDetailsTool,x:p.x,y:p.y,width:.2,height:.2,
         reverseX:false,reverseY:false,...currentShapeDefaults()};
-      if(activeDetailsTool==='Draw')item.points=[{x:p.x,y:p.y}];
+      if(activeDetailsTool==='Draw'){item.points=[{x:p.x,y:p.y}];item.angle=0;}
       (page.shapes ||= []).push(item);selectedShapeId=item.id;mode='create';
     }
     const bounds=hit?.getBoundingClientRect();
@@ -1628,7 +1664,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     if(!g.saved&&(Math.abs(dx)>.1||Math.abs(dy)>.1)){
       recordPageEdit(currentPage());g.saved=true;
     }
-    if(g.mode==='rotate' && (item.type==='Rectangle'||item.type==='Ellipse')){
+    if(g.mode==='rotate' && (item.type==='Rectangle'||item.type==='Ellipse'||item.type==='Draw')){
       const a=Math.atan2(e.clientY-g.centerY,e.clientX-g.centerX)*180/Math.PI;
       let delta=a-g.startAngle;delta=((delta+180)%360+360)%360-180;
       item.angle=(g.original.angle||0)+delta;
@@ -1638,7 +1674,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const points=item.points;
       const last=points[points.length-1];
       if(Math.hypot((p.x-last.x)*shapeLayer.clientWidth/100,(p.y-last.y)*shapeLayer.clientHeight/100)>=1){
-        points.push({x:p.x,y:p.y});g.moved=true;
+        points.push({x:p.x,y:p.y});Object.assign(item,drawBounds(points));g.moved=true;
       }
     }else if(g.mode==='create'){
       const r=shapeLayer.getBoundingClientRect();
@@ -1657,6 +1693,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const shiftX=Math.max(-minX,Math.min(100-maxX,dx));
       const shiftY=Math.max(-minY,Math.min(100-maxY,dy));
       item.points=points.map(v=>({x:v.x+shiftX,y:v.y+shiftY}));
+      Object.assign(item,drawBounds(item.points));
     }else if(g.mode==='move'){
       item.x=Math.max(0,Math.min(100-item.width,g.original.x+dx));
       item.y=Math.max(0,Math.min(100-item.height,g.original.y+dy));
@@ -1673,6 +1710,22 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       item.x=Math.min(sx,ex);item.y=Math.min(sy,ey);
       item.width=Math.abs(ex-sx);item.height=Math.abs(ey-sy);
       item.reverseX=ex<sx;item.reverseY=ey<sy;
+    }else if(item.type==='Draw'){
+      const o=g.original,local=resizePointerDelta(dx,dy,o.angle,shapeLayer);
+      let next;
+      if(g.mode.length>1)next=proportionalCornerResize(o,g.mode,local.dx,local.dy,.2,.2);
+      else{
+        const left=g.mode==='w'?o.x+local.dx:o.x,top=g.mode==='n'?o.y+local.dy:o.y;
+        const right=g.mode==='e'?o.x+o.width+local.dx:o.x+o.width;
+        const bottom=g.mode==='s'?o.y+o.height+local.dy:o.y+o.height;
+        next={x:Math.min(left,right),y:Math.min(top,bottom),width:Math.max(.2,Math.abs(right-left)),height:Math.max(.2,Math.abs(bottom-top))};
+      }
+      preserveRotatedResizeAnchor(o,next,g.mode,shapeLayer);
+      Object.assign(item,next);
+      item.points=(o.points||[]).map(p=>({
+        x:next.x+(p.x-o.x)/Math.max(.2,o.width)*next.width,
+        y:next.y+(p.y-o.y)/Math.max(.2,o.height)*next.height
+      }));
     }else if(g.mode.length>1){
       const local=resizePointerDelta(dx,dy,g.original.angle,shapeLayer);
       Object.assign(item,proportionalCornerResize(g.original,g.mode,local.dx,local.dy,.2,.2));
