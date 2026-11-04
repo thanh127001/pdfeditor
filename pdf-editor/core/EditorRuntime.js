@@ -273,7 +273,10 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const version = ++renderVersion;
     grid.replaceChildren();
     $('emptyState').classList.toggle('d-none', pages.length > 0);
-    grid.className = `row row-cols-2 row-cols-sm-3 row-cols-lg-${columns} g-3`;
+    grid.className = `row row-cols-2 row-cols-sm-3 row-cols-lg-${Math.min(columns, 6)} g-3`;
+    // Bootstrap row-cols classes stop at 6; preserve mobile breakpoints for 7–12.
+    grid.classList.toggle('pdf-columns-extended', columns > 6);
+    grid.style.setProperty('--pdf-column-count', columns);
     for (const [i, item] of pages.entries()) {
       const col = document.createElement('div'); col.className = 'col'; col.dataset.pageId = item.id;
       const card = document.createElement('div'); card.className = `page-card card h-100 position-relative user-select-none ${selected.has(item.id) ? 'border-primary border-3 shadow-sm' : ''}`;
