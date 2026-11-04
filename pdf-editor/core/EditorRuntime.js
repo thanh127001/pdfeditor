@@ -282,7 +282,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     grid.className = `row row-cols-2 row-cols-sm-3 row-cols-lg-${columns} g-3`;
     for (const [i, item] of pages.entries()) {
       const col = document.createElement('div'); col.className = 'col'; col.dataset.pageId = item.id;
-      const card = document.createElement('div'); card.className = `page-card card h-100 position-relative user-select-none ${selected.has(item.id) ? 'border-primary' : 'border-secondary'}`;
+      const card = document.createElement('div'); card.className = `page-card card h-100 position-relative user-select-none border-2 ${selected.has(item.id) ? 'border-primary' : 'border-secondary'}`;
       
       card.draggable = true; // Keep native drag enabled after async PDF import; dragstart checks busy.
       const thumb = document.createElement('div'); thumb.className = 'thumb ratio bg-body-tertiary overflow-hidden rounded-top'; thumb.draggable = false;
