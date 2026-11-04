@@ -755,9 +755,10 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   // Drag the viewport (not the PDF content), without altering document history.
   let holdDrag = null;
   const holdViewport = $('editorPage');
+  const holdScrollArea = $('pageDetailsScrollArea');
   holdViewport.addEventListener('pointerdown', e => {
     if (activeDetailsTool || !isDetails() || e.button !== 0 || !e.isPrimary) return;
-    holdDrag = { id: e.pointerId, x: e.clientX, y: e.clientY, left: window.scrollX, top: window.scrollY };
+    holdDrag = { id: e.pointerId, x: e.clientX, y: e.clientY, left: holdScrollArea.scrollLeft, top: holdScrollArea.scrollTop };
     holdViewport.setPointerCapture(e.pointerId);
     holdViewport.style.cursor = 'grabbing';
     e.preventDefault();
@@ -765,7 +766,8 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   }, true);
   holdViewport.addEventListener('pointermove', e => {
     if (!holdDrag || holdDrag.id !== e.pointerId) return;
-    window.scrollTo(holdDrag.left - (e.clientX - holdDrag.x), holdDrag.top - (e.clientY - holdDrag.y));
+    holdScrollArea.scrollLeft = holdDrag.left - (e.clientX - holdDrag.x);
+    holdScrollArea.scrollTop = holdDrag.top - (e.clientY - holdDrag.y);
     e.preventDefault();
   });
   const endHoldDrag = e => {
