@@ -859,6 +859,14 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     handle.style.zIndex='5';handle.style.touchAction='none';
     handle.style.cursor=(corner==='nw'||corner==='se')?'nwse-resize':'nesw-resize';
   }
+  function styleObjectSideHandle(handle,side,offset=0){
+    handle.style.width=OBJECT_HANDLE_SIZE+'px';handle.style.height=OBJECT_HANDLE_SIZE+'px';
+    handle.style.left=side==='w'?(-offset)+'px':side==='e'?'calc(100% + '+offset+'px)':'50%';
+    handle.style.top=side==='n'?(-offset)+'px':side==='s'?'calc(100% + '+offset+'px)':'50%';
+    handle.style.transform='translate(-50%, -50%)';
+    handle.style.zIndex='5';handle.style.touchAction='none';
+    handle.style.cursor=(side==='w'||side==='e')?'ew-resize':'ns-resize';
+  }
   function appendObjectDeleteButton(box,label,onDelete,offset=0){
     const b=document.createElement('button');b.type='button';
     b.className='position-absolute d-flex align-items-center justify-content-center bg-white border border-danger rounded-circle text-danger';
@@ -1201,12 +1209,12 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       textarea.addEventListener('blur',()=>{typed=false;});
       box.append(textarea,bar);
       if(t.id===selectedTextId){
-        for(const corner of ['nw','ne','sw','se']){
+        for(const corner of ['nw','ne','sw','se','n','e','s','w']){
           const handle=document.createElement('div');
           handle.className='position-absolute bg-primary';
           handle.dataset.textResize=t.id;
           handle.dataset.corner=corner;
-          styleObjectCornerHandle(handle,corner);
+          corner.length===1?styleObjectSideHandle(handle,corner):styleObjectCornerHandle(handle,corner);
           box.append(handle);
         }
       }
@@ -1284,9 +1292,9 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const c=g.corner,o=g.original;
       const right=o.x+o.width,bottom=o.y+o.height;
       if(c.includes('w')){t.x=Math.max(0,Math.min(right-5,o.x+dx));t.width=right-t.x;}
-      else {t.x=o.x;t.width=Math.max(5,Math.min(100-o.x,o.width+dx));}
+      else if(c.includes('e')){t.x=o.x;t.width=Math.max(5,Math.min(100-o.x,o.width+dx));}
       if(c.includes('n')){t.y=Math.max(0,Math.min(bottom-3,o.y+dy));t.height=bottom-t.y;}
-      else {t.y=o.y;t.height=Math.max(3,Math.min(100-o.y,o.height+dy));}
+      else if(c.includes('s')){t.y=o.y;t.height=Math.max(3,Math.min(100-o.y,o.height+dy));}
     }
     renderTexts();updateButtons();
   });
@@ -1434,7 +1442,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       if(item.id===selectedShapeId && item.type===activeDetailsTool) {
         if(item.type!=='Line')box.style.outline='1px dashed #0d6efd';
         if(item.type==='Rectangle'||item.type==='Ellipse') box.style.outlineOffset=Math.max(0,Number(item.strokeWidth)||0)+'px';
-        for(const corner of (item.type==='Line' ? ['line-start','line-end'] : ['nw','ne','sw','se'])) {
+        for(const corner of (item.type==='Line' ? ['line-start','line-end'] : ['nw','ne','sw','se','n','e','s','w'])) {
           const handle=document.createElement('div');handle.dataset.shapeHandle=corner;
           handle.className=item.type==='Line'?'position-absolute bg-primary border border-white rounded-circle':'position-absolute bg-primary';
           handle.style.width='12px';handle.style.height='12px';
@@ -1444,7 +1452,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
             handle.style.left=item.width===0?'calc(50% - 6px)':atStart?(item.reverseX?'calc(100% - 6px)':'-6px'):(item.reverseX?'-6px':'calc(100% - 6px)');
             handle.style.cursor='crosshair';
           } else {
-            styleObjectCornerHandle(handle,corner,Math.max(0,Number(item.strokeWidth)||0));
+            corner.length===1?styleObjectSideHandle(handle,corner,Math.max(0,Number(item.strokeWidth)||0)):styleObjectCornerHandle(handle,corner,Math.max(0,Number(item.strokeWidth)||0));
           }
           box.append(handle);
         }
@@ -1557,7 +1565,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       item.y=Math.max(0,Math.min(99.8,Math.min(top,bottom)));
       item.width=Math.max(.2,Math.min(100-item.x,Math.abs(right-left)));
       item.height=Math.max(.2,Math.min(100-item.y,Math.abs(bottom-top)));
-      if((item.type==='Rectangle'&&item.square)||(item.type==='Ellipse'&&item.circle)){
+      if(g.mode.length>1 && ((item.type==='Rectangle'&&item.square)||(item.type==='Ellipse'&&item.circle))){
         const r=shapeLayer.getBoundingClientRect(),factor=r.width/Math.max(1,r.height);
         const oppositeX=g.mode.includes('w')?o.x+o.width:o.x;
         const oppositeY=g.mode.includes('n')?o.y+o.height:o.y;
@@ -1686,16 +1694,13 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       img.style.transform=`scale(${obj.flipH?-1:1},${obj.flipV?-1:1})`;
       img.style.transformOrigin='center center';box.append(img);
       if(obj.id===selectedImageId){
-        for(const corner of ['nw','ne','sw','se']){
+        for(const corner of ['nw','ne','sw','se','n','e','s','w']){
           const handle=document.createElement('div');handle.dataset.imageResize='true';
           handle.dataset.corner=corner;
           handle.className='position-absolute bg-primary';
           handle.style.width='12px';handle.style.height='12px';
-          handle.style.left=corner.includes('w')?'0':'100%';
-          handle.style.top=corner.includes('n')?'0':'100%';
-          handle.style.transform='translate(-50%, -50%)';
-          handle.style.zIndex='5';handle.style.touchAction='none';
-          handle.style.cursor=(corner==='nw'||corner==='se')?'nwse-resize':'nesw-resize';
+          if(corner.length===1)styleObjectSideHandle(handle,corner);
+          else styleObjectCornerHandle(handle,corner);
           box.append(handle);
         }
         const rotateStem=document.createElement('div');rotateStem.className='position-absolute bg-primary';
@@ -1760,9 +1765,9 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const o=g.original,c=g.corner;
       const anchorX=c.includes('w')?o.x+o.width:o.x;
       const anchorY=c.includes('n')?o.y+o.height:o.y;
-      let w=Math.max(1,o.width+(c.includes('w')?-dx:dx));
-      let h=Math.max(1,o.height+(c.includes('n')?-dy:dy));
-      if(obj.keepRatio){
+      let w=c==='n'||c==='s'?o.width:Math.max(1,o.width+(c.includes('w')?-dx:dx));
+      let h=c==='w'||c==='e'?o.height:Math.max(1,o.height+(c.includes('n')?-dy:dy));
+      if(obj.keepRatio && c.length>1){
         if(Math.abs(dx)>=Math.abs(dy*o.aspectPage))h=w/o.aspectPage;
         else w=h*o.aspectPage;
       }
