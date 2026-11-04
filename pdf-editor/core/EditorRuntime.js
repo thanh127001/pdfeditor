@@ -297,7 +297,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       details.style.setProperty('--bs-btn-hover-border-color', 'var(--bs-btn-border-color)');
       details.addEventListener('click', e => { e.stopPropagation(); openDetails(item.id); });
       const sizeLabel = document.createElement('div');
-      sizeLabel.className = 'badge bg-primary position-absolute top-0 start-0 m-2';
+      sizeLabel.className = 'badge bg-info position-absolute top-0 start-0 m-2';
       sizeLabel.textContent = '…';
       sizeLabel.title = 'Page size';
       void PdfEngine.getPageSize(item).then(size => {
