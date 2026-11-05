@@ -762,7 +762,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       ['Line','Draw','Rectangle','Ellipse'].includes(activeDetailsTool) ?
         (page.shapes||[]).some(v=>v.id===selectedShapeId && v.type===activeDetailsTool) : false
     );
-    $('pageDetailsDeleteColumn').classList.toggle('d-none', !selectedObject);
     button.disabled = busy || !selectedObject;
   }
   $('deleteDetailsObject').addEventListener('click', () => {
