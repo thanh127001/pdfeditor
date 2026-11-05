@@ -883,6 +883,52 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   // Tool selection is explicit: blank clicks and other annotation types never switch tools.
   // Each annotation layer already accepts pointer input only for its active tool.
 
+  // Read-only type label for existing annotations. Never changes tool or selection.
+  const objectTypeHint = document.createElement('span');
+  objectTypeHint.className = 'badge text-bg-dark position-fixed d-none';
+  objectTypeHint.style.pointerEvents = 'none';
+  objectTypeHint.style.zIndex = '1090';
+  document.body.append(objectTypeHint);
+  const hideObjectTypeHint = () => objectTypeHint.classList.add('d-none');
+  const objectHintLayers = [
+    ['imageLayer', '[data-image-id]', 'Image'],
+    ['textLayer', '[data-text-id]', 'Text'],
+    ['highlightLayer', '[data-highlight-id]', 'Highlight'],
+    ['shapeLayer', '[data-shape-id]', null]
+  ];
+  $('pageDetailsScrollArea').addEventListener('pointermove', e => {
+    // Only hover: never display while creating, moving, resizing, or rotating.
+    if (!isDetails() || busy || e.pointerType !== 'mouse' || e.buttons ||
+        textCreate || imageCreate || highlightGesture || textGesture ||
+        imageGesture || shapeGesture || holdDrag) {
+      hideObjectTypeHint();
+      return;
+    }
+    let type = null;
+    for (const [layerId, selector, label] of objectHintLayers) {
+      for (const node of [...$(layerId).querySelectorAll(selector)].reverse()) {
+        const rect = node.getBoundingClientRect();
+        if (e.clientX < rect.left || e.clientX > rect.right ||
+            e.clientY < rect.top || e.clientY > rect.bottom) continue;
+        if (layerId === 'shapeLayer') {
+          const shape = (currentPage()?.shapes || []).find(v => v.id === node.dataset.shapeId);
+          if (!shape || (shape.type === 'Draw' && !drawHit(shape, e.clientX, e.clientY))) continue;
+          type = shape.type;
+        } else type = label;
+        break;
+      }
+      if (type) break;
+    }
+    if (!type) { hideObjectTypeHint(); return; }
+    objectTypeHint.textContent = type;
+    objectTypeHint.style.left = Math.max(0, Math.min(e.clientX + 14, window.innerWidth - 100)) + 'px';
+    objectTypeHint.style.top = Math.max(0, Math.min(e.clientY + 18, window.innerHeight - 32)) + 'px';
+    objectTypeHint.classList.remove('d-none');
+  }, true);
+  $('pageDetailsScrollArea').addEventListener('pointerdown', hideObjectTypeHint, true);
+  $('pageDetailsScrollArea').addEventListener('pointerleave', hideObjectTypeHint);
+  $('pageDetailsScrollArea').addEventListener('scroll', hideObjectTypeHint, {passive:true});
+
   // Highlight coordinates are percentages of the rendered page, so zoom and
   // page reordering do not change annotation geometry or ownership.
   function currentPage() { return pages[indexOf(detailsId)]; }
