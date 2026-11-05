@@ -804,7 +804,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const row = $('pageDetailsToolOptions');
     row.classList.toggle('d-none', false);
     const content = $('pageDetailsToolOptionsContent');
-    content.replaceChildren();
+    content.replaceChildren($('deleteDetailsObject'));
     syncDetailsObjectDelete();
     if (!activeDetailsTool) {
       return;
@@ -973,7 +973,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     syncDetailsObjectDelete();
     if (activeDetailsTool !== 'Highlight') return;
     const content = $('pageDetailsToolOptionsContent');
-    content.replaceChildren();
+    content.replaceChildren($('deleteDetailsObject'));
     const selectedObject = currentHighlight();
     const settings = selectedObject || highlightDefaults;
     const makeControl = (labelText, type, id, value, min, max, step) => {
@@ -1266,7 +1266,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   function renderTextOptions() {
     syncDetailsObjectDelete();
     if (activeDetailsTool !== 'Text') return;
-    const content = $('pageDetailsToolOptionsContent'); content.replaceChildren();
+    const content = $('pageDetailsToolOptionsContent'); content.replaceChildren($('deleteDetailsObject'));
     const obj = currentText(), settings = obj || textDefaults;
     const control = (labelText, type, key, choices) => {
       const group = document.createElement('div'); group.className = 'd-flex align-items-center gap-2 flex-wrap';
@@ -1559,7 +1559,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   function renderShapeOptions() {
     syncDetailsObjectDelete();
     if (!shapeTools.includes(activeDetailsTool)) return;
-    const content = $('pageDetailsToolOptionsContent'); content.replaceChildren();
+    const content = $('pageDetailsToolOptionsContent'); content.replaceChildren($('deleteDetailsObject'));
     const obj = currentShape(), options = obj || currentShapeDefaults();
     function option(label, type, key, min, max, step) {
       const group = document.createElement('div'); group.className='d-flex align-items-center gap-2';
@@ -1895,7 +1895,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   function renderImageOptions() {
     syncDetailsObjectDelete();
     if (activeDetailsTool !== 'Image') return;
-    const content = $('pageDetailsToolOptionsContent'); content.replaceChildren();
+    const content = $('pageDetailsToolOptionsContent'); content.replaceChildren($('deleteDetailsObject'));
     const obj = currentImage();
     const settings = obj || imageDefaults;
     const upload = document.createElement('button'); upload.type='button';
