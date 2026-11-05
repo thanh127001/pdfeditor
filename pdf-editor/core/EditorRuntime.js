@@ -846,7 +846,11 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       }
       if (match) break;
     }
-    if (!match || match.type === activeDetailsTool) return;
+    if (!match) {
+      if (activeDetailsTool) blankPagePointer = {id:e.pointerId,x:e.clientX,y:e.clientY};
+      return;
+    }
+    if (match.type === activeDetailsTool) return;
     // Select the clicked annotation, and refresh all tool-specific controls.
     activeDetailsTool = match.type;
     selectedHighlightId = match.type === 'Highlight' ? match.id : null;
@@ -868,13 +872,16 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       blankPagePointer = {id:e.pointerId,x:e.clientX,y:e.clientY};
     }
   }, true);
-  $('editorPage').addEventListener('pointerup', e => {
+  document.addEventListener('pointerup', e => {
     if (!blankPagePointer || blankPagePointer.id !== e.pointerId) return;
     const g=blankPagePointer;blankPagePointer=null;
     if (Math.hypot(e.clientX-g.x,e.clientY-g.y)>4) return;
-    activeDetailsTool=null;selectedHighlightId=null;selectedTextId=null;selectedImageId=null;selectedShapeId=null;
-    pendingImage=null;updateDetailsToolSelection();
-    renderHighlights();renderTexts();renderImages();renderShapes();
+    queueMicrotask(() => {
+      if (!isDetails()) return;
+      activeDetailsTool=null;selectedHighlightId=null;selectedTextId=null;selectedImageId=null;selectedShapeId=null;
+      pendingImage=null;updateDetailsToolSelection();
+      renderHighlights();renderTexts();renderImages();renderShapes();
+    });
   }, true);
 
   // Highlight coordinates are percentages of the rendered page, so zoom and
