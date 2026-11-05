@@ -832,25 +832,31 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   // Automatically activate the matching tool when an existing annotation is clicked.
   // This runs in capture phase, before a different drawing tool can create an object.
   let blankDetailsClick = null;
-  function activateHoldAfterBlankClick() {
-    activeDetailsTool = null;
+  function handleBlankDetailsClick(hadSelection) {
+    // First blank click deselects an object without changing the drawing tool.
+    // Only a subsequent blank click, with nothing selected, returns to Hold.
+    if (!hadSelection) activeDetailsTool = null;
     selectedHighlightId = null; selectedTextId = null; selectedImageId = null; selectedShapeId = null;
-    pendingImage = null;
+    if (!hadSelection) pendingImage = null;
     updateDetailsToolSelection();
     renderHighlights(); renderTexts(); renderImages(); renderShapes(); updateButtons();
+  }
+  function hasSelectedDetailsObject() {
+    return selectedHighlightId !== null || selectedTextId !== null ||
+      selectedImageId !== null || selectedShapeId !== null;
   }
   $('pageDetailsScrollArea').addEventListener('pointerdown', e => {
     if (!isDetails() || busy || e.button !== 0 || !activeDetailsTool) return;
     const rect = $('detailsPaper').getBoundingClientRect();
     if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
-      blankDetailsClick = {id:e.pointerId,x:e.clientX,y:e.clientY};
+      blankDetailsClick = {id:e.pointerId,x:e.clientX,y:e.clientY,hadSelection:hasSelectedDetailsObject()};
     }
   }, true);
   document.addEventListener('pointerup', e => {
     const g = blankDetailsClick;
     if (!g || g.id !== e.pointerId) return;
     blankDetailsClick = null;
-    if (Math.hypot(e.clientX-g.x,e.clientY-g.y) < 4) queueMicrotask(activateHoldAfterBlankClick);
+    if (Math.hypot(e.clientX-g.x,e.clientY-g.y) < 4) queueMicrotask(() => handleBlankDetailsClick(g.hadSelection));
   });
   document.addEventListener('pointercancel', e => {
     if (blankDetailsClick?.id === e.pointerId) blankDetailsClick = null;
@@ -884,7 +890,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       if (match) break;
     }
     if (!match) {
-      if (activeDetailsTool) blankDetailsClick = {id:e.pointerId,x:e.clientX,y:e.clientY};
+      if (activeDetailsTool) blankDetailsClick = {id:e.pointerId,x:e.clientX,y:e.clientY,hadSelection:hasSelectedDetailsObject()};
       return;
     }
     blankDetailsClick = null;
