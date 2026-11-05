@@ -728,10 +728,13 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   }
   function requestExport() {
     if (!pages.length || busy) return;
-    if (!selected.size) { void exportPages('all'); return; }
+    // Always open the modal to allow naming the exported file.
+    // Show scope choices only when the user has selected pages.
+    $('exportScopeOptions').classList.toggle('d-none', !selected.size);
     $('allPageCount').textContent = `Export all ${pages.length} page(s)`;
     $('selectedPageCount').textContent = `Export ${selected.size} selected page(s)`;
-    $('exportAll').checked = true; exportModal.show();
+    $('exportAll').checked = true;
+    exportModal.show();
   }
   for (const id of ['exportPdf']) $(id).addEventListener('click',requestExport);
   $('confirmExport').addEventListener('click', () => {
