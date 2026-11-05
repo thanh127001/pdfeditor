@@ -818,6 +818,30 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   }
   // Automatically activate the matching tool when an existing annotation is clicked.
   // This runs in capture phase, before a different drawing tool can create an object.
+  let blankDetailsClick = null;
+  function activateHoldAfterBlankClick() {
+    activeDetailsTool = null;
+    selectedHighlightId = null; selectedTextId = null; selectedImageId = null; selectedShapeId = null;
+    pendingImage = null;
+    updateDetailsToolSelection();
+    renderHighlights(); renderTexts(); renderImages(); renderShapes(); updateButtons();
+  }
+  $('pageDetailsScrollArea').addEventListener('pointerdown', e => {
+    if (!isDetails() || busy || e.button !== 0 || !activeDetailsTool) return;
+    const rect = $('detailsPaper').getBoundingClientRect();
+    if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
+      blankDetailsClick = {id:e.pointerId,x:e.clientX,y:e.clientY};
+    }
+  }, true);
+  document.addEventListener('pointerup', e => {
+    const g = blankDetailsClick;
+    if (!g || g.id !== e.pointerId) return;
+    blankDetailsClick = null;
+    if (Math.hypot(e.clientX-g.x,e.clientY-g.y) < 4) queueMicrotask(activateHoldAfterBlankClick);
+  });
+  document.addEventListener('pointercancel', e => {
+    if (blankDetailsClick?.id === e.pointerId) blankDetailsClick = null;
+  });
   $('detailsPaper').addEventListener('pointerdown', e => {
     if (busy || e.button !== 0 || !isDetails()) return;
     const page = currentPage();
@@ -846,7 +870,12 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       }
       if (match) break;
     }
-    if (!match || match.type === activeDetailsTool) return;
+    if (!match) {
+      if (activeDetailsTool) blankDetailsClick = {id:e.pointerId,x:e.clientX,y:e.clientY};
+      return;
+    }
+    blankDetailsClick = null;
+    if (match.type === activeDetailsTool) return;
     // Select the clicked annotation, and refresh all tool-specific controls.
     activeDetailsTool = match.type;
     selectedHighlightId = match.type === 'Highlight' ? match.id : null;
@@ -1113,17 +1142,11 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   function endHighlightGesture(e) {
     if (!highlightGesture) return;
     const g=highlightGesture;
-    if(e.type==='pointerup'&&g.mode==='create'&&!g.moved&&activeDetailsTool!=='Draw'){
-      const h=(currentPage()?.highlights||[]).find(v=>v.id===g.id);
-      if(h){
-        const d=clickCreateDimensions(highlightLayer,g.start.x,g.start.y);
-        // Click-only Highlight uses the configured height, not the 100px shape default.
-        // Keep the same vertical centering as pointerdown and fit inside the page.
-        const height=Math.max(0.2,Math.min(100,Number(g.original.height)||Number(highlightDefaults.height)||3));
-        h.x=g.start.x;
-        h.y=Math.max(0,Math.min(100-height,g.start.y-height/2));
-        h.width=d.width;h.height=height;h.angle=0;
-      }
+    if (g.mode === 'create' && (!g.moved || e.type === 'pointercancel')) {
+      const page = currentPage();
+      if (page?.id === g.pageId) page.highlights = (page.highlights || []).filter(v => v.id !== g.id);
+      if (selectedHighlightId === g.id) selectedHighlightId = null;
+      if (g.recorded) pageHistory.get(g.pageId)?.pop();
     }
     highlightGesture = null;
     if (highlightLayer.hasPointerCapture(e.pointerId)) highlightLayer.releasePointerCapture(e.pointerId);
@@ -1338,21 +1361,14 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     return {x:Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100)),
       y:Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100))};
   }
+  let textCreate = null;
   textLayer.addEventListener('pointerdown',e=>{
     if(activeDetailsTool!=='Text'||busy||e.button!==0)return;
     const hit=e.target.closest('[data-text-id]');
-    if(!hit){
-      if(selectedTextId){selectText(null);return;}
-      const page=currentPage(); if(!page)return;
-      const p=textPoint(e); recordPageEdit(page);
-      const bounds=textLayer.getBoundingClientRect();
-      const width=Math.min(100,200/Math.max(1,bounds.width)*100);
-      const height=Math.min(100,100/Math.max(1,bounds.height)*100);
-      const t={id:`text-${++textCounter}`,x:Math.min(p.x,100-width),y:Math.min(p.y,100-height),
-        width,height,content:'Text',...textDefaults};
-      (page.texts ||= []).push(t); selectText(t.id); updateButtons();
-      const field=textLayer.querySelector(`[data-text-id="${t.id}"] textarea`);
-      if(field){field.focus();field.select();}
+    if (!hit) {
+      textCreate = {id:e.pointerId,pageId:detailsId,start:textPoint(e)};
+      textLayer.setPointerCapture(e.pointerId);
+      e.preventDefault();
       return;
     }
     const t=currentText();
@@ -1367,6 +1383,24 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     textGesture={pageId:detailsId,id:t.id,mode:rotate?'rotate':resize?'resize':'move',start:textPoint(e),original:{...t},saved:false,centerX,centerY,startAngle,corner:resize?.dataset.corner||'se'};
     textLayer.setPointerCapture(e.pointerId); e.preventDefault();
   });
+  textLayer.addEventListener('pointerup', e => {
+    const g=textCreate;
+    if (!g || g.id!==e.pointerId) return;
+    textCreate=null;
+    if (textLayer.hasPointerCapture(e.pointerId)) textLayer.releasePointerCapture(e.pointerId);
+    if (g.pageId!==detailsId) return;
+    const p=textPoint(e),r=textLayer.getBoundingClientRect();
+    if (Math.hypot((p.x-g.start.x)*r.width/100,(p.y-g.start.y)*r.height/100)<4) return;
+    const page=currentPage();if(!page)return;
+    const x=Math.min(g.start.x,p.x),y=Math.min(g.start.y,p.y);
+    const width=Math.max(1,Math.abs(p.x-g.start.x)),height=Math.max(1,Math.abs(p.y-g.start.y));
+    recordPageEdit(page);
+    const t={id:`text-${++textCounter}`,x,y,width,height,content:'Text',...textDefaults};
+    (page.texts ||= []).push(t);selectText(t.id);updateButtons();
+    const field=textLayer.querySelector(`[data-text-id="${t.id}"] textarea`);
+    if(field){field.focus();field.select();}
+  });
+  textLayer.addEventListener('pointercancel',e=>{if(textCreate?.id===e.pointerId)textCreate=null;});
   textLayer.addEventListener('pointermove',e=>{
     const g=textGesture;if(!g||g.pageId!==detailsId)return;
     const t=currentText();if(!t)return;
@@ -1762,11 +1796,11 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   function finishShape(e){
     if(!shapeGesture)return;
     const g=shapeGesture;
-    if(e.type==='pointerup'&&g.mode==='create'&&!g.moved&&activeDetailsTool!=='Draw'){
-      const item=(currentPage()?.shapes||[]).find(v=>v.id===g.id);
-      if(item){const d=clickCreateDimensions(shapeLayer,g.start.x,g.start.y);
-        item.x=g.start.x;item.y=g.start.y;item.width=d.width;item.height=item.type==='Line'?0:d.height;
-        item.reverseX=false;item.reverseY=false;}
+    if (g.mode === 'create' && (!g.moved || e.type === 'pointercancel')) {
+      const page = currentPage();
+      if (page?.id === g.pageId) page.shapes = (page.shapes || []).filter(v => v.id !== g.id);
+      if (selectedShapeId === g.id) selectedShapeId = null;
+      if (g.saved) pageHistory.get(g.pageId)?.pop();
     }
     shapeGesture=null;
     if(shapeLayer.hasPointerCapture(e.pointerId))shapeLayer.releasePointerCapture(e.pointerId);
@@ -1881,21 +1915,16 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     }
   }
   function imagePoint(e){const r=imageLayer.getBoundingClientRect();return {x:Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100)),y:Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100))};}
+  let imageCreate = null;
   imageLayer.addEventListener('pointerdown',e=>{
     if(activeDetailsTool!=='Image'||busy||e.button!==0)return;
     const hit=e.target.closest('[data-image-id]');
-    if(!hit){
-      if(selectedImageId){selectImage(null);return;}
-      if(!pendingImage)return;
-      const page=currentPage();if(!page)return;
-      const point=imagePoint(e), pageSize=imagePagePixels();
-      const width=Math.min(100,imageDefaults.width/pageSize.width*100);
-      const aspectPage=pendingImage.aspect/imagePageRatio();
-      const height=width/aspectPage;
-      const fit=Math.min(1,100/Math.max(width,0.001),100/Math.max(height,0.001));
-      const fittedWidth=width*fit, fittedHeight=height*fit;
-      const obj={id:`image-${++imageCounter}`,src:pendingImage.src,x:Math.max(0,Math.min(100-fittedWidth,point.x-fittedWidth/2)),y:Math.max(0,Math.min(100-fittedHeight,point.y-fittedHeight/2)),width:fittedWidth,height:fittedHeight,aspectPage,keepRatio:imageDefaults.keepRatio,angle:imageDefaults.angle,flipH:imageDefaults.flipH,flipV:imageDefaults.flipV};
-      recordPageEdit(page);(page.images ||= []).push(obj);pendingImage=null;selectImage(obj.id);updateButtons();return;
+    if (!hit) {
+      if (!pendingImage) return;
+      imageCreate = {id:e.pointerId,pageId:detailsId,start:imagePoint(e)};
+      imageLayer.setPointerCapture(e.pointerId);
+      e.preventDefault();
+      return;
     }
     if(selectedImageId!==hit.dataset.imageId){selectImage(hit.dataset.imageId);return;}
     const obj=currentImage();if(!obj)return;
@@ -1907,6 +1936,25 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       centerX,centerY,startAngle:pointerAngle,corner:e.target.closest('[data-image-resize]')?.dataset.corner||'se'};
     imageLayer.setPointerCapture(e.pointerId);e.preventDefault();
   });
+  imageLayer.addEventListener('pointerup',e=>{
+    const g=imageCreate;
+    if(!g||g.id!==e.pointerId)return;
+    imageCreate=null;
+    if(imageLayer.hasPointerCapture(e.pointerId))imageLayer.releasePointerCapture(e.pointerId);
+    if(g.pageId!==detailsId||!pendingImage)return;
+    const p=imagePoint(e),r=imageLayer.getBoundingClientRect();
+    if(Math.hypot((p.x-g.start.x)*r.width/100,(p.y-g.start.y)*r.height/100)<4)return;
+    const page=currentPage();if(!page)return;
+    const width=Math.abs(p.x-g.start.x),aspectPage=pendingImage.aspect/imagePageRatio();
+    const height=width/aspectPage,fit=Math.min(1,100/Math.max(width,.001),100/Math.max(height,.001));
+    const w=Math.max(.2,width*fit),h=Math.max(.2,height*fit);
+    const obj={id:`image-${++imageCounter}`,src:pendingImage.src,
+      x:Math.max(0,Math.min(100-w,Math.min(g.start.x,p.x))),
+      y:Math.max(0,Math.min(100-h,Math.min(g.start.y,p.y))),width:w,height:h,aspectPage,
+      keepRatio:imageDefaults.keepRatio,angle:imageDefaults.angle,flipH:imageDefaults.flipH,flipV:imageDefaults.flipV};
+    recordPageEdit(page);(page.images ||= []).push(obj);pendingImage=null;selectImage(obj.id);updateButtons();
+  });
+  imageLayer.addEventListener('pointercancel',e=>{if(imageCreate?.id===e.pointerId)imageCreate=null;});
   imageLayer.addEventListener('pointermove',e=>{
     const g=imageGesture;if(!g||g.pageId!==detailsId)return;
     const obj=currentImage();if(!obj)return;
