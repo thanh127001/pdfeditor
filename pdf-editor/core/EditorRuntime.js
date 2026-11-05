@@ -865,7 +865,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   }, true);
 
   let blankPagePointer = null;
-  $('editorPage').addEventListener('pointerdown', e => {
+  $('pageDetailsScrollArea').addEventListener('pointerdown', e => {
     if (!isDetails() || !activeDetailsTool || e.button !== 0) return;
     const paper = $('detailsPaper').getBoundingClientRect();
     if (e.clientX < paper.left || e.clientX > paper.right || e.clientY < paper.top || e.clientY > paper.bottom) {
