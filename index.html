@@ -112,6 +112,7 @@
       <div id="pageDetailsDrawingTools" class="row g-2 align-items-center mt-1">
         <div class="col-12 col-lg"><div class="d-flex flex-wrap gap-2">
           <button id="toolHold" type="button" class="btn btn-primary" aria-pressed="true" title="Hold and drag to move the page"><i class="bi bi-hand-index-thumb me-1"></i>Hold</button>
+          <button id="toolSelectText" type="button" class="btn btn-outline-primary" data-demo-tool="SelectText" title="Select and copy recognized PDF text"><i class="bi bi-cursor-text me-1"></i>Select Text</button>
           <button id="toolPageSize" type="button" class="btn btn-outline-primary" data-demo-tool="PageSize"><i class="bi bi-aspect-ratio me-1"></i>Page Size</button>
           <button id="toolHighlight" type="button" class="btn btn-outline-primary" data-demo-tool="Highlight"><i class="bi bi-highlighter me-1"></i>Highlight</button>
           <button id="toolAddText" type="button" class="btn btn-outline-primary" data-demo-tool="Text"><i class="bi bi-fonts me-1"></i>Text</button>
@@ -130,7 +131,7 @@
       </div>
     </div>
     <div id="pageDetailsScrollArea" class="flex-grow-1 overflow-auto">
-    <div id="editorPage" class="bg-body-tertiary rounded my-3 p-3"><div id="detailsPaper" class="mx-auto bg-white shadow rounded overflow-hidden position-relative"><canvas id="detailsCanvas" class="d-block" aria-label="Selected PDF page"></canvas><div id="highlightLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="textLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="imageLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="shapeLayer" class="position-absolute top-0 start-0 w-100 h-100"></div></div></div><textarea id="editorText" class="d-none" aria-hidden="true"></textarea>
+    <div id="editorPage" class="bg-body-tertiary rounded my-3 p-3"><div id="detailsPaper" class="mx-auto bg-white shadow rounded overflow-hidden position-relative"><canvas id="detailsCanvas" class="d-block" aria-label="Selected PDF page"></canvas><div id="ocrTextLayer" class="position-absolute top-0 start-0 w-100 h-100 d-none" aria-label="Selectable recognized PDF text"></div><div id="highlightLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="textLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="imageLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="shapeLayer" class="position-absolute top-0 start-0 w-100 h-100"></div></div></div><textarea id="editorText" class="d-none" aria-hidden="true"></textarea>
     </div>
   </section>
 </main>
@@ -152,6 +153,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
 (() => {
   const root = document.documentElement;
