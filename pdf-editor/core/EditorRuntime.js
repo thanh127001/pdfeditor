@@ -2166,7 +2166,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     $('detailsZoomButton').textContent = `${tr('zoom', 'Zoom')}: ${$('detailsZoom').value}%`;
     if (isDetails()) $('pagePosition').textContent = `${tr('page', 'Page')} ${indexOf(detailsId) + 1} / ${pages.length}`;
     $('pages').querySelectorAll('[id^="pageLabel_"]').forEach(label => {
-      const number = label.textContent.match(/\\d+$/)?.[0];
+      const number = label.textContent.match(/[0-9]+$/)?.[0];
       if (number) label.textContent = `${tr('page', 'Page')} ${number}`;
     });
   });
