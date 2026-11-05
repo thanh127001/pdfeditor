@@ -171,35 +171,17 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     else cols[index]?.classList.add('border-start','border-primary','border-5');
   }
   function findGap(x,y) {
-    const cols = [...$('pages').children]; if (!cols.length) return;
-    // Find the nearest page row, then the nearest insertion boundary in that row.
-    // This avoids choosing a gap in a different row when the grid has many columns.
-    const rows = [];
-    for (let i = 0; i < cols.length; i++) {
-      const r = cols[i].getBoundingClientRect();
-      let row = rows.find(entry => Math.abs(entry.top - r.top) < 8);
-      if (!row) { row = {top:r.top,bottom:r.bottom,items:[]}; rows.push(row); }
-      row.items.push({index:i,rect:r}); row.bottom = Math.max(row.bottom,r.bottom);
-    }
-    // The space below the final row is an explicit end-of-list drop zone.
-    // This also handles a final row with fewer cards than the selected column count.
-    const lastRow = rows[rows.length - 1];
-    const lastItem = lastRow.items[lastRow.items.length - 1];
-    if (y >= lastRow.bottom || (y >= lastRow.top && x >= lastItem.rect.right)) {
-      showDropGap(cols.length);
-      return;
-    }
-    const row = rows.reduce((best,current) => {
-      const dist = Math.max(current.top-y,0,y-current.bottom);
-      const bestDist = Math.max(best.top-y,0,y-best.bottom);
-      return dist < bestDist ? current : best;
+    const cols = [...$('pages').children];
+    if (!cols.length) return;
+    // A pointer over a page always inserts BEFORE that page.
+    // Any blank space (including grid gutters and outside the list) appends.
+    const targetIndex = cols.findIndex(col => {
+      const card = col.querySelector('.page-card');
+      if (!card) return false;
+      const r = card.getBoundingClientRect();
+      return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
     });
-    let gap = row.items[0].index;
-    for (const entry of row.items) {
-      if (x >= (entry.rect.left + entry.rect.right)/2) gap = entry.index+1;
-      else break;
-    }
-    showDropGap(gap);
+    showDropGap(targetIndex < 0 ? cols.length : targetIndex);
   }
   function stopScroll() {
     if (scrollFrame !== null) cancelAnimationFrame(scrollFrame);
