@@ -991,10 +991,10 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const input = document.createElement('input');
       input.type = type; input.id = id; input.value = value;
       input.className = type === 'color' ? 'form-control form-control-color form-control-sm' : 'form-range';
-      if (type === 'range') { input.min = min; input.max = max; input.step = step; input.style.width = '110px'; input.style.maxWidth = '100%'; input.style.flex = '0 1 110px'; input.style.minWidth = '65px'; }
+      if (type === 'range') { input.min = min; input.max = max; input.step = step; input.classList.add('w-auto', 'flex-shrink-0'); }
       const output = document.createElement('span');
       output.className = 'small text-body-secondary text-nowrap text-start flex-shrink-0';
-      if (type === 'range') { output.style.width = '5ch'; output.style.fontVariantNumeric = 'tabular-nums'; }
+      if (type === 'range') { output.classList.add('font-monospace'); }
       const isHeight=id==='highlightHeight';
       const pageHeight=Math.max(1,$('highlightLayer').getBoundingClientRect().height);
       if(isHeight){input.min='1';input.max='200';input.step='1';input.value=String(Math.round(value*pageHeight/100));}
@@ -1283,10 +1283,10 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       input.className = type === 'select' ? 'form-select form-select-sm w-auto' : type === 'color' ? 'form-control form-control-color form-control-sm' : 'form-control form-control-sm';
       if (type === 'select') {
         for (const font of choices) { const option = document.createElement('option'); option.value = font; option.textContent = font; input.append(option); }
-      } else { input.type = type; if (type === 'range') { input.min='1';input.max='100';input.step='1';input.className='form-range mb-0';input.style.width='110px'; } }
+      } else { input.type = type; if (type === 'range') { input.min='1';input.max='100';input.step='1';input.className='form-range mb-0';input.classList.add('w-auto', 'flex-shrink-0'); } }
       input.value = settings[key];
       const value=type==='range'?document.createElement('output'):null;
-      if(value){value.className='small text-body-secondary text-start flex-shrink-0';value.style.width='5ch';value.style.fontVariantNumeric='tabular-nums';value.textContent=input.value+'px';}
+      if(value){value.className='small text-body-secondary text-start flex-shrink-0';value.classList.add('font-monospace');value.textContent=input.value+'px';}
       let saved=false;
       const commit = () => {
         if (obj && !saved) {recordPageEdit(currentPage());saved=true;}
@@ -1312,10 +1312,10 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       slider.type = 'range'; slider.id = 'textOption_backgroundOpacity';
       slider.className = 'form-range mb-0'; slider.min = '0'; slider.max = '100'; slider.step = '5';
       slider.value = settings.backgroundOpacity ?? 50;
-      slider.style.width = '110px';
+      slider.classList.add('w-auto', 'flex-shrink-0');
       const value = document.createElement('output');
       value.className = 'small text-body-secondary text-start flex-shrink-0';
-      value.style.width = '5ch'; value.style.fontVariantNumeric = 'tabular-nums';
+      value.classList.add('font-monospace');
       value.textContent = `${slider.value}%`;
       let saved = false;
       slider.addEventListener('input', () => {
@@ -1574,9 +1574,9 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       name.htmlFor=input.id; name.textContent=label;
       input.type=type; input.value=options[key];
       input.className=type==='color'?'form-control form-control-color form-control-sm': 'form-range';
-      if(type==='range') {input.min=min;input.max=max;input.step=step;input.style.width='110px';}
+      if(type==='range') {input.min=min;input.max=max;input.step=step;input.classList.add('w-auto', 'flex-shrink-0');}
       const output=document.createElement('output'); output.className='small text-secondary text-start font-monospace';
-      output.style.width='5ch'; output.textContent=type==='range'?String(options[key])+(key==='strokeWidth'?'pt':'%'):'';
+      output.classList.add('font-monospace'); output.textContent=type==='range'?String(options[key])+(key==='strokeWidth'?'pt':'%'):'';
       let saved=false;
       input.addEventListener('input',()=>{
         if(obj&&!saved){recordPageEdit(currentPage());saved=true;}
