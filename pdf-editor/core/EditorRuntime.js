@@ -1945,6 +1945,8 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     if(activeDetailsTool!=='Image'||busy||e.button!==0)return;
     const hit=e.target.closest('[data-image-id]');
     if (!hit) {
+      // Deselect an image on blank PDF space without leaving the Image tool.
+      if (selectedImageId !== null) selectImage(null);
       if (!pendingImage) return;
       imageCreate = {id:e.pointerId,pageId:detailsId,start:imagePoint(e)};
       imageLayer.append(imageCreatePreview);
