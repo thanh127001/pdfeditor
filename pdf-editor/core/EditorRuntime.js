@@ -757,7 +757,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   const holdViewport = $('editorPage');
   const holdScrollArea = $('pageDetailsScrollArea');
   holdViewport.addEventListener('pointerdown', e => {
-    if (activeDetailsTool || !isDetails() || e.button !== 0 || !e.isPrimary) return;
+    if (activeDetailsTool || !isDetails() || e.button !== 0 || !e.isPrimary || e.target.closest('[data-object-delete]')) return;
     // Let the page's annotation hit-test activate its editing tool in Hold mode.
     const hitAnnotation = ['highlightLayer','textLayer','imageLayer','shapeLayer'].some(layerId =>
       [...$(layerId).querySelectorAll('[data-highlight-id],[data-text-id],[data-image-id],[data-shape-id]')]
@@ -846,7 +846,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       selectedImageId !== null || selectedShapeId !== null;
   }
   $('pageDetailsScrollArea').addEventListener('pointerdown', e => {
-    if (!isDetails() || busy || e.button !== 0 || !activeDetailsTool) return;
+    if (!isDetails() || busy || e.button !== 0 || !activeDetailsTool || e.target.closest('[data-object-delete]')) return;
     const rect = $('detailsPaper').getBoundingClientRect();
     if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
       blankDetailsClick = {id:e.pointerId,x:e.clientX,y:e.clientY,hadSelection:hasSelectedDetailsObject()};
@@ -862,7 +862,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     if (blankDetailsClick?.id === e.pointerId) blankDetailsClick = null;
   });
   $('detailsPaper').addEventListener('pointerdown', e => {
-    if (busy || e.button !== 0 || !isDetails()) return;
+    if (busy || e.button !== 0 || !isDetails() || e.target.closest('[data-object-delete]')) return;
     const page = currentPage();
     if (!page) return;
     const x = e.clientX, y = e.clientY;
@@ -1018,6 +1018,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     b.className='position-absolute d-flex align-items-center justify-content-center bg-white border border-danger rounded-circle text-danger';
     b.style.cssText='width:24px;height:24px;top:50%;left:calc(100% + 18px);transform:translateY(-50%);z-index:20;cursor:pointer;touch-action:none;padding:0;pointer-events:auto';
     b.title='Delete '+label;b.setAttribute('aria-label','Delete '+label);
+    b.dataset.objectDelete = 'true';
     b.innerHTML='<i class="bi bi-trash" style="font-size:13px;pointer-events:none"></i>';
     for(const name of ['pointerdown','mousedown','touchstart','dblclick'])b.addEventListener(name,e=>e.stopPropagation());
     b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();onDelete();});
