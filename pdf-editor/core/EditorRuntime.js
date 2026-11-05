@@ -752,8 +752,8 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     Highlight: 'Highlight options', Text: 'Text options', Image: 'Image options',
     Line: 'Line options', Draw: 'Draw options', Rectangle: 'Rectangle options', Ellipse: 'Ellipse options'
   };
+  const deletableDetailsTools = ['Highlight','Text','Image','Line','Draw','Rectangle','Ellipse'];
   function syncDetailsObjectDelete() {
-    const button = $('deleteDetailsObject');
     const page = currentPage();
     const selectedObject = page && (
       activeDetailsTool === 'Highlight' ? (page.highlights||[]).some(v=>v.id===selectedHighlightId) :
@@ -762,18 +762,24 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       ['Line','Draw','Rectangle','Ellipse'].includes(activeDetailsTool) ?
         (page.shapes||[]).some(v=>v.id===selectedShapeId && v.type===activeDetailsTool) : false
     );
-    button.disabled = busy || !selectedObject;
+    document.querySelectorAll('[data-delete-tool]').forEach(button => {
+      const isCurrentTool = button.dataset.deleteTool === activeDetailsTool;
+      button.classList.toggle('d-none', !isCurrentTool);
+      button.disabled = busy || !isCurrentTool || !selectedObject;
+    });
+    $('pageDetailsDeleteColumn').classList.toggle('d-none', !deletableDetailsTools.includes(activeDetailsTool));
   }
-  $('deleteDetailsObject').addEventListener('click', () => {
-    if(busy)return;
+  document.querySelectorAll('[data-delete-tool]').forEach(button => button.addEventListener('click', () => {
+    const tool = button.dataset.deleteTool;
+    if(busy || activeDetailsTool !== tool)return;
     const page=currentPage();if(!page)return;
     let collection, id;
-    if(activeDetailsTool==='Highlight'){collection='highlights';id=selectedHighlightId;}
-    else if(activeDetailsTool==='Text'){collection='texts';id=selectedTextId;}
-    else if(activeDetailsTool==='Image'){collection='images';id=selectedImageId;}
-    else if(['Line','Draw','Rectangle','Ellipse'].includes(activeDetailsTool)){collection='shapes';id=selectedShapeId;}
+    if(tool==='Highlight'){collection='highlights';id=selectedHighlightId;}
+    else if(tool==='Text'){collection='texts';id=selectedTextId;}
+    else if(tool==='Image'){collection='images';id=selectedImageId;}
+    else if(['Line','Draw','Rectangle','Ellipse'].includes(tool)){collection='shapes';id=selectedShapeId;}
     else return;
-    if(!id || !(page[collection]||[]).some(v=>v.id===id && (collection!=='shapes'||v.type===activeDetailsTool)))return;
+    if(!id || !(page[collection]||[]).some(v=>v.id===id && (collection!=='shapes'||v.type===tool)))return;
     recordPageEdit(page);
     page[collection]=page[collection].filter(v=>v.id!==id);
     if(collection==='highlights')selectedHighlightId=null;
@@ -782,7 +788,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     else selectedShapeId=null;
     updateDetailsToolSelection();
     renderHighlights();renderTexts();renderImages();renderShapes();updateButtons();
-  });
+  }));
   function updateDetailsToolSelection() {
     // Page Size is a page command, not a registered drawing tool.
     const drawingTool = ['PageSize', 'SelectText'].includes(activeDetailsTool) ? null : activeDetailsTool;
