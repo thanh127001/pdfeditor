@@ -1370,7 +1370,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     if (!hit) {
       // Deselect the current text on blank space, but keep the Text tool active.
       if (selectedTextId !== null) selectText(null);
-      textCreate = {id:e.pointerId,pageId:detailsId,start:textPoint(e)};
+      textCreate = {id:e.pointerId,pageId:detailsId,start:textPoint(e),objectId:null};
       textLayer.append(textCreatePreview);
       textCreatePreview.style.display='none';
       textLayer.setPointerCapture(e.pointerId);
@@ -1396,14 +1396,10 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     textCreatePreview.style.display='none';
     if (textLayer.hasPointerCapture(e.pointerId)) textLayer.releasePointerCapture(e.pointerId);
     if (g.pageId!==detailsId) return;
-    const p=textPoint(e),r=textLayer.getBoundingClientRect();
-    if (Math.hypot((p.x-g.start.x)*r.width/100,(p.y-g.start.y)*r.height/100)<4) return;
-    const page=currentPage();if(!page)return;
-    const x=Math.min(g.start.x,p.x),y=Math.min(g.start.y,p.y);
-    const width=Math.max(1,Math.abs(p.x-g.start.x)),height=Math.max(1,Math.abs(p.y-g.start.y));
-    recordPageEdit(page);
-    const t={id:`text-${++textCounter}`,x,y,width,height,content:'Text',...textDefaults};
-    (page.texts ||= []).push(t);selectText(t.id);updateButtons();
+    if (g.pageId!==detailsId || !g.objectId) return;
+    const t=(currentPage()?.texts||[]).find(v=>v.id===g.objectId);
+    if(!t)return;
+    updateButtons();
     const field=textLayer.querySelector(`[data-text-id="${t.id}"] textarea`);
     if(field){field.focus();field.select();}
   });
@@ -1412,7 +1408,22 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   });
   textLayer.addEventListener('pointermove',e=>{
     if(textCreate?.id===e.pointerId && textCreate.pageId===detailsId){
-      updateTextCreatePreview(textCreate.start,textPoint(e));
+      const g=textCreate,p=textPoint(e),r=textLayer.getBoundingClientRect();
+      if(!g.objectId && Math.hypot((p.x-g.start.x)*r.width/100,(p.y-g.start.y)*r.height/100)>=4){
+        const page=currentPage();if(!page)return;
+        recordPageEdit(page);
+        const t={id:`text-${++textCounter}`,x:g.start.x,y:g.start.y,width:1,height:1,content:'Text',...textDefaults};
+        (page.texts ||= []).push(t);g.objectId=t.id;selectedTextId=t.id;
+        renderTextOptions();
+      }
+      if(g.objectId){
+        const t=(currentPage()?.texts||[]).find(v=>v.id===g.objectId);
+        if(t){
+          t.x=Math.min(g.start.x,p.x);t.y=Math.min(g.start.y,p.y);
+          t.width=Math.max(1,Math.abs(p.x-g.start.x));t.height=Math.max(1,Math.abs(p.y-g.start.y));
+          renderTexts();
+        }
+      }
       e.preventDefault();
       return;
     }
@@ -1948,7 +1959,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       // Deselect an image on blank PDF space without leaving the Image tool.
       if (selectedImageId !== null) selectImage(null);
       if (!pendingImage) return;
-      imageCreate = {id:e.pointerId,pageId:detailsId,start:imagePoint(e)};
+      imageCreate = {id:e.pointerId,pageId:detailsId,start:imagePoint(e),objectId:null};
       imageLayer.append(imageCreatePreview);
       imageCreatePreview.style.display='none';
       imageLayer.setPointerCapture(e.pointerId);
@@ -1971,23 +1982,30 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     imageCreate=null;
     imageCreatePreview.style.display='none';
     if(imageLayer.hasPointerCapture(e.pointerId))imageLayer.releasePointerCapture(e.pointerId);
-    if(g.pageId!==detailsId||!pendingImage)return;
-    const p=imagePoint(e),r=imageLayer.getBoundingClientRect();
-    const bounds=imageCreateBounds(g.start,p,pendingImage.aspect);
-    if(Math.hypot((p.x-g.start.x)*r.width/100,(p.y-g.start.y)*r.height/100)<4 ||
-       bounds.width*r.width/100<4 || bounds.height*r.height/100<4)return;
-    const page=currentPage();if(!page)return;
-    const obj={id:`image-${++imageCounter}`,src:pendingImage.src,
-      ...bounds,aspectPage:pendingImage.aspect/imagePageRatio(),
-      keepRatio:true,angle:imageDefaults.angle,flipH:imageDefaults.flipH,flipV:imageDefaults.flipV};
-    recordPageEdit(page);(page.images ||= []).push(obj);selectImage(obj.id);updateButtons();
+    if(g.pageId!==detailsId || !g.objectId)return;
+    updateButtons();
   });
   imageLayer.addEventListener('pointercancel',e=>{
     if(imageCreate?.id===e.pointerId){imageCreate=null;imageCreatePreview.style.display='none';}
   });
   imageLayer.addEventListener('pointermove',e=>{
     if(imageCreate?.id===e.pointerId && imageCreate.pageId===detailsId && pendingImage){
-      updateImageCreatePreview(imageCreateBounds(imageCreate.start,imagePoint(e),pendingImage.aspect));
+      const g=imageCreate,p=imagePoint(e),r=imageLayer.getBoundingClientRect();
+      const bounds=imageCreateBounds(g.start,p,pendingImage.aspect);
+      if(!g.objectId && Math.hypot((p.x-g.start.x)*r.width/100,(p.y-g.start.y)*r.height/100)>=4 &&
+         bounds.width*r.width/100>=4 && bounds.height*r.height/100>=4){
+        const page=currentPage();if(!page)return;
+        recordPageEdit(page);
+        const obj={id:`image-${++imageCounter}`,src:pendingImage.src,...bounds,
+          aspectPage:pendingImage.aspect/imagePageRatio(),keepRatio:true,
+          angle:imageDefaults.angle,flipH:imageDefaults.flipH,flipV:imageDefaults.flipV};
+        (page.images ||= []).push(obj);g.objectId=obj.id;selectedImageId=obj.id;
+        renderImageOptions();
+      }
+      if(g.objectId){
+        const obj=(currentPage()?.images||[]).find(v=>v.id===g.objectId);
+        if(obj){Object.assign(obj,bounds);renderImages();}
+      }
       e.preventDefault();
       return;
     }
