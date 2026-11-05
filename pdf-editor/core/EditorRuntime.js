@@ -1308,6 +1308,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   }
   function renderTexts() {
     textLayer.replaceChildren();
+    if(textCreate)textLayer.append(textCreatePreview);
     textLayer.style.pointerEvents = activeDetailsTool === 'Text' ? 'auto' : 'none';
     const paperWidth = $('detailsPaper').clientWidth || 1;
     for (const t of currentPage()?.texts || []) {
@@ -1382,11 +1383,25 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       y:Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100))};
   }
   let textCreate = null;
+  // Temporary drawing outline; the text object is created only on pointer release.
+  const textCreatePreview=document.createElement('div');
+  textCreatePreview.className='position-absolute border border-2 border-primary';
+  textCreatePreview.style.cssText='position:absolute;display:none;pointer-events:none;box-sizing:border-box;border-style:dashed!important;z-index:10;';
+  function updateTextCreatePreview(start,end){
+    const x=Math.min(start.x,end.x),y=Math.min(start.y,end.y);
+    textCreatePreview.style.left=x+'%';
+    textCreatePreview.style.top=y+'%';
+    textCreatePreview.style.width=Math.abs(end.x-start.x)+'%';
+    textCreatePreview.style.height=Math.abs(end.y-start.y)+'%';
+    textCreatePreview.style.display='block';
+  }
   textLayer.addEventListener('pointerdown',e=>{
     if(activeDetailsTool!=='Text'||busy||e.button!==0)return;
     const hit=e.target.closest('[data-text-id]');
     if (!hit) {
       textCreate = {id:e.pointerId,pageId:detailsId,start:textPoint(e)};
+      textLayer.append(textCreatePreview);
+      textCreatePreview.style.display='none';
       textLayer.setPointerCapture(e.pointerId);
       e.preventDefault();
       return;
@@ -1407,6 +1422,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const g=textCreate;
     if (!g || g.id!==e.pointerId) return;
     textCreate=null;
+    textCreatePreview.style.display='none';
     if (textLayer.hasPointerCapture(e.pointerId)) textLayer.releasePointerCapture(e.pointerId);
     if (g.pageId!==detailsId) return;
     const p=textPoint(e),r=textLayer.getBoundingClientRect();
@@ -1420,8 +1436,15 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const field=textLayer.querySelector(`[data-text-id="${t.id}"] textarea`);
     if(field){field.focus();field.select();}
   });
-  textLayer.addEventListener('pointercancel',e=>{if(textCreate?.id===e.pointerId)textCreate=null;});
+  textLayer.addEventListener('pointercancel',e=>{
+    if(textCreate?.id===e.pointerId){textCreate=null;textCreatePreview.style.display='none';}
+  });
   textLayer.addEventListener('pointermove',e=>{
+    if(textCreate?.id===e.pointerId && textCreate.pageId===detailsId){
+      updateTextCreatePreview(textCreate.start,textPoint(e));
+      e.preventDefault();
+      return;
+    }
     const g=textGesture;if(!g||g.pageId!==detailsId)return;
     const t=currentText();if(!t)return;
     const p=textPoint(e),dx=p.x-g.start.x,dy=p.y-g.start.y;
