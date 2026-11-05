@@ -339,7 +339,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       card.draggable = true; // Keep native drag enabled after async PDF import; dragstart checks busy.
       const thumb = document.createElement('div'); thumb.className = 'thumb ratio bg-body-tertiary overflow-hidden rounded-top'; thumb.draggable = false;
       thumb.style.setProperty('--bs-aspect-ratio','141.4%');
-      const canvas = document.createElement('canvas'); canvas.className = 'position-absolute top-50 start-50 translate-middle mw-100 mh-100 object-fit-contain bg-white shadow-sm'; canvas.draggable = false; canvas.setAttribute('aria-label', `Preview page ${i + 1}`); thumb.append(canvas);
+      const canvas = document.createElement('canvas'); canvas.className = 'position-absolute top-50 start-50 translate-middle mw-100 mh-100 object-fit-contain bg-white shadow-sm'; canvas.draggable = false; canvas.setAttribute('aria-label', `${tr('previewPage', 'Preview page')} ${i + 1}`); thumb.append(canvas);
       const actions = document.createElement('div'); actions.className = 'position-absolute top-0 start-0 w-100 h-100 pe-none d-flex flex-column justify-content-between p-2 gap-2';
       const topActions = document.createElement('div'); topActions.className = 'd-flex flex-wrap align-items-start justify-content-between gap-2';
       const bottomActions = document.createElement('div'); bottomActions.className = 'd-flex flex-wrap align-items-end justify-content-between gap-2';
@@ -347,21 +347,21 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       selectButton.className = `thumb-select btn btn-sm ${selected.has(item.id) ? 'btn-primary active' : 'btn-secondary'} pe-auto`;
       selectButton.id = `pageSelect_${item.id}`;
       selectButton.innerHTML = `<i class="bi bi-${selected.has(item.id) ? 'check-square' : 'square'}"></i>`;
-      selectButton.setAttribute('aria-label', `${selected.has(item.id) ? 'Remove page from' : 'Add page to'} multi-selection`);
+      selectButton.setAttribute('aria-label', `${selected.has(item.id) ? tr('removeFromSelection', 'Remove page from multi-selection') : tr('addToSelection', 'Add page to multi-selection')}`);
       selectButton.setAttribute('aria-pressed', String(selected.has(item.id)));
       selectButton.addEventListener('click', e => { e.stopPropagation(); if (!busy) choose(item.id, true); });
       selectButton.addEventListener('dragstart', e => e.preventDefault());
       const details = document.createElement('button'); details.type = 'button'; details.id = `pageDetails_${item.id}`;
-      details.className = 'btn btn-sm btn-primary pe-auto'; details.innerHTML = '<i class="bi bi-zoom-in me-1"></i>Details';
+      details.className = 'btn btn-sm btn-primary pe-auto'; details.innerHTML = `<i class="bi bi-zoom-in me-1"></i>${tr('details', 'Details')}`;
       details.addEventListener('click', e => { e.stopPropagation(); openDetails(item.id); });
       const sizeLabel = document.createElement('div');
       sizeLabel.className = 'badge bg-info';
       sizeLabel.textContent = '…';
-      sizeLabel.title = 'Page size';
+      sizeLabel.title = tr('pageSizeTitle', 'Page size');
       void PdfEngine.getPageSize(item).then(size => {
         if (version !== renderVersion || !sizeLabel.isConnected) return;
         sizeLabel.textContent = pageSizeLabel(size);
-        sizeLabel.title = `Page size: ${size.width.toFixed(2)} × ${size.height.toFixed(2)} pt`;
+        sizeLabel.title = `${tr('pageSizeTitle', 'Page size')}: ${size.width.toFixed(2)} × ${size.height.toFixed(2)} pt`;
       }).catch(() => {
         if (version === renderVersion && sizeLabel.isConnected) sizeLabel.textContent = '?';
       });
@@ -2165,9 +2165,21 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     $('columnsButton').innerHTML = `<i class="bi bi-grid-3x3-gap me-1"></i>${tr('columns', 'Columns')}: ${columns}`;
     $('detailsZoomButton').textContent = `${tr('zoom', 'Zoom')}: ${$('detailsZoom').value}%`;
     if (isDetails()) $('pagePosition').textContent = `${tr('page', 'Page')} ${indexOf(detailsId) + 1} / ${pages.length}`;
-    $('pages').querySelectorAll('[id^="pageLabel_"]').forEach(label => {
-      const number = label.textContent.match(/[0-9]+$/)?.[0];
-      if (number) label.textContent = `${tr('page', 'Page')} ${number}`;
+    // Only update thumbnail text/accessible labels; do not rebuild cards or canvases.
+    $('pages').querySelectorAll(':scope > .col').forEach((col, index) => {
+      const pageNumber = index + 1;
+      const label = col.querySelector('[id^="pageLabel_"]');
+      if (label) label.textContent = `${tr('page', 'Page')} ${pageNumber}`;
+      const canvas = col.querySelector('canvas');
+      if (canvas) canvas.setAttribute('aria-label', `${tr('previewPage', 'Preview page')} ${pageNumber}`);
+      const details = col.querySelector('[id^="pageDetails_"]');
+      if (details) details.innerHTML = `<i class="bi bi-zoom-in me-1"></i>${tr('details', 'Details')}`;
+      const select = col.querySelector('.thumb-select');
+      if (select) select.setAttribute('aria-label', selected.has(Number(col.dataset.pageId)) || selected.has(col.dataset.pageId)
+        ? tr('removeFromSelection', 'Remove page from multi-selection')
+        : tr('addToSelection', 'Add page to multi-selection'));
+      const size = col.querySelector('.badge.bg-info');
+      if (size?.title) size.title = size.title.replace(/^[^:]+(?=:)/, tr('pageSizeTitle', 'Page size'));
     });
   });
 
