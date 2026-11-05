@@ -698,7 +698,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     $('editorPage').style.cursor = holding ? 'grab' : '';
     $('editorPage').style.touchAction = holding ? 'none' : '';
     const row = $('pageDetailsToolOptions');
-    row.classList.toggle('d-none', false);
+    row.classList.toggle('d-none', !activeDetailsTool);
     const content = $('pageDetailsToolOptionsContent');
     content.replaceChildren();
     if (!activeDetailsTool) {
