@@ -152,6 +152,8 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       }
       const selectButton = col.querySelector('.thumb-select');
       if (selectButton) {
+        selectButton.classList.toggle('btn-primary', isSelected);
+        selectButton.classList.toggle('btn-secondary', !isSelected);
         selectButton.classList.toggle('active', isSelected);
         selectButton.setAttribute('aria-pressed', String(isSelected));
         selectButton.setAttribute('aria-label', `${isSelected ? 'Remove page from' : 'Add page to'} multi-selection`);
@@ -292,7 +294,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const topActions = document.createElement('div'); topActions.className = 'd-flex flex-wrap align-items-start justify-content-between gap-2';
       const bottomActions = document.createElement('div'); bottomActions.className = 'd-flex flex-wrap align-items-end justify-content-between gap-2';
       const selectButton = document.createElement('button'); selectButton.type = 'button';
-      selectButton.className = `thumb-select btn btn-sm btn-primary pe-auto ${selected.has(item.id) ? 'active' : ''}`;
+      selectButton.className = `thumb-select btn btn-sm ${selected.has(item.id) ? 'btn-primary active' : 'btn-secondary'} pe-auto`;
       selectButton.id = `pageSelect_${item.id}`;
       selectButton.innerHTML = `<i class="bi bi-${selected.has(item.id) ? 'check-square-fill' : 'check-square'}"></i>`;
       selectButton.setAttribute('aria-label', `${selected.has(item.id) ? 'Remove page from' : 'Add page to'} multi-selection`);
