@@ -230,13 +230,9 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     }
     updateButtons();
   }
-  function clearDropMarkers() { $('pages').querySelectorAll('.border-start,.border-end').forEach(e => e.classList.remove('border-start','border-end','border-primary','border-5')); }
+  // Keep the existing insertion-gap calculation without drawing a destination marker.
   function showDropGap(index) {
-    dropIndex = index; clearDropMarkers();
-    const cols = [...$('pages').children];
-    if (!cols.length) return;
-    if (index === cols.length) cols[cols.length - 1].classList.add('border-end','border-primary','border-5');
-    else cols[index]?.classList.add('border-start','border-primary','border-5');
+    dropIndex = index;
   }
   function findGap(x,y) {
     const cols = [...$('pages').children];
@@ -305,7 +301,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       findGap(e.clientX,e.clientY);
     }
   }
-  function endDrag() { draggingIds = null; dropIndex = null; stopScroll(); clearDropMarkers(); $('pages').querySelectorAll('.page-card.opacity-50').forEach(card => card.classList.remove('opacity-50')); setTimeout(() => { suppressClickAfterDrag = false; }, 0); }
+  function endDrag() { draggingIds = null; dropIndex = null; stopScroll(); $('pages').querySelectorAll('.page-card.opacity-50').forEach(card => card.classList.remove('opacity-50')); setTimeout(() => { suppressClickAfterDrag = false; }, 0); }
   // ISO A-series classification with a 1 mm tolerance for rounded PDF dimensions.
   function pageSizeLabel(size) {
     const mm = 25.4 / 72;
