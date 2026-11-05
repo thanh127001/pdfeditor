@@ -29,7 +29,6 @@
         <a class="navbar-brand d-flex align-items-center gap-2 mb-0" href="/" aria-label="PDF Editor home"><i class="bi bi-file-earmark-pdf fs-3 text-danger"></i><span class="h3 mb-0">PDF Editor</span></a>
       </div>
       <div class="d-flex flex-wrap align-items-center gap-2 ms-auto">
-        <input id="exportFileName" class="form-control form-control-sm w-auto" type="text" placeholder="File Name" data-i18n-placeholder="fileName" aria-label="File Name" data-i18n-aria="fileName" value="Untitled Document" maxlength="200">
         <div class="dropdown">
           <button id="languageButton" type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Choose language"><i class="bi bi-translate me-1"></i><span id="languageLabel">English</span></button>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageButton">
@@ -152,9 +151,12 @@
 </div></div></div>
 <div id="exportScopeModal" class="modal fade" tabindex="-1" aria-labelledby="exportScopeModalLabel"><div class="modal-dialog"><div class="modal-content">
   <div class="modal-header"><h2 id="exportScopeModalLabel" class="modal-title fs-5"><span data-i18n="exportPdf">Export PDF</span></h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
-  <div class="modal-body"><p><span data-i18n="exportPrompt">Choose which pages to export.</span></p>
+  <div class="modal-body">
+    <div class="mb-3"><label for="exportFileName" class="form-label" data-i18n="fileName">File Name</label><input id="exportFileName" class="form-control" type="text" placeholder="File Name" data-i18n-placeholder="fileName" aria-label="File Name" data-i18n-aria="fileName" value="Untitled Document" maxlength="200"></div>
+    <div id="exportScopeOptions"><p><span data-i18n="exportPrompt">Choose which pages to export.</span></p>
     <div class="form-check mb-3"><input id="exportAll" class="form-check-input" type="radio" name="exportScope" value="all" checked><label class="form-check-label" for="exportAll"><strong><span data-i18n="allPages">All Pages</span></strong><br><small id="allPageCount" class="text-secondary"></small></label></div>
     <div class="form-check"><input id="exportSelected" class="form-check-input" type="radio" name="exportScope" value="selected"><label class="form-check-label" for="exportSelected"><strong><span data-i18n="selectedPages">Selected Pages</span></strong><br><small id="selectedPageCount" class="text-secondary"></small></label></div>
+    </div>
   </div>
   <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><span data-i18n="cancel">Cancel</span></button><button id="confirmExport" type="button" class="btn btn-success"><i class="bi bi-download me-1"></i><span data-i18n="exportPdf">Export PDF</span></button></div>
 </div></div></div>
