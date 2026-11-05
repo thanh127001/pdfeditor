@@ -157,7 +157,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         selectButton.classList.toggle('active', isSelected);
         selectButton.setAttribute('aria-pressed', String(isSelected));
         selectButton.setAttribute('aria-label', `${isSelected ? 'Remove page from' : 'Add page to'} multi-selection`);
-        selectButton.innerHTML = `<i class="bi bi-${isSelected ? 'check-square-fill' : 'check-square'}"></i>`;
+        selectButton.innerHTML = `<i class="bi bi-${isSelected ? 'check-square' : 'square'}"></i>`;
       }
     }
     updateButtons();
@@ -296,7 +296,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const selectButton = document.createElement('button'); selectButton.type = 'button';
       selectButton.className = `thumb-select btn btn-sm ${selected.has(item.id) ? 'btn-primary active' : 'btn-secondary'} pe-auto`;
       selectButton.id = `pageSelect_${item.id}`;
-      selectButton.innerHTML = `<i class="bi bi-${selected.has(item.id) ? 'check-square-fill' : 'check-square'}"></i>`;
+      selectButton.innerHTML = `<i class="bi bi-${selected.has(item.id) ? 'check-square' : 'square'}"></i>`;
       selectButton.setAttribute('aria-label', `${selected.has(item.id) ? 'Remove page from' : 'Add page to'} multi-selection`);
       selectButton.setAttribute('aria-pressed', String(selected.has(item.id)));
       selectButton.addEventListener('click', e => { e.stopPropagation(); if (!busy) choose(item.id, true); });
