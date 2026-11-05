@@ -2,6 +2,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
 
   const $ = id => document.getElementById(id);
   const DEFAULT_NAME = 'Untitled Document';
+  const tr = (key, fallback) => window.pdfEditorI18n?.t(key, fallback) || fallback;
   let pages = [], selected = new Set(), anchor = null, detailsId = null, nextId = 1;
   let columns = 6, history = [], pageHistory = new Map(), busy = false, renderVersion = 0, draggingIds = null, dropIndex = null;
   let dragPointer = null, scrollFrame = null, suppressClickAfterDrag = false;
@@ -53,7 +54,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     $('deleteSelected').disabled = $('rotateSelected').disabled = busy || !s;
     $('moveUp').disabled = busy || one <= 0;
     $('moveDown').disabled = busy || one < 0 || one >= n - 1;
-    $('clearSelection').innerHTML = `<i class="bi bi-x-circle me-1"></i>Clear Selection (${s})`;
+    $('clearSelection').innerHTML = `<i class="bi bi-x-circle me-1"></i>${tr('clearSelection', 'Clear Selection')} (${s})`;
     $('previous').disabled = busy || indexOf(detailsId) <= 0;
     $('next').disabled = busy || indexOf(detailsId) < 0 || indexOf(detailsId) >= n - 1;
   }
@@ -67,7 +68,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   function renderDetails() {
     const i = indexOf(detailsId);
     if (i < 0) { setView(false); return; }
-    $('pagePosition').textContent = `Page ${i + 1} / ${pages.length}`;
+    $('pagePosition').textContent = `${tr('page', 'Page')} ${i + 1} / ${pages.length}`;
     void syncPageSizeSelection();
     $('editorText').value = pages[i].demoNotes || '';
     updateButtons();
@@ -183,7 +184,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     updateDetailsToolSelection();
     // Each entry into Page Details starts at 100% zoom.
     $('detailsZoom').value = '100';
-    $('detailsZoomButton').textContent = 'Zoom: 100%';
+    $('detailsZoomButton').textContent = `${tr('zoom', 'Zoom')}: 100%`;
     document.querySelectorAll('[data-zoom-value]').forEach(item => item.classList.toggle('active', item.dataset.zoomValue === '100'));
     renderList(); setView(true);
   }
@@ -367,7 +368,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const pageLabel = document.createElement('div');
       pageLabel.id = `pageLabel_${item.id}`;
       pageLabel.className = 'badge bg-info';
-      pageLabel.textContent = `Page ${i + 1}`;
+      pageLabel.textContent = `${tr('page', 'Page')} ${i + 1}`;
       topActions.append(sizeLabel, details);
       bottomActions.append(pageLabel, selectButton);
       actions.append(topActions, bottomActions); card.append(thumb, actions);
@@ -565,7 +566,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   document.addEventListener('drop', commitPageDrop, true);
   $('columnsMenu').querySelectorAll('[data-columns]').forEach(button => button.addEventListener('click', () => {
     columns = Number(button.dataset.columns);
-    $('columnsButton').innerHTML = `<i class="bi bi-grid-3x3-gap me-1"></i>Columns: ${columns}`;
+    $('columnsButton').innerHTML = `<i class="bi bi-grid-3x3-gap me-1"></i>${tr('columns', 'Columns')}: ${columns}`;
     $('columnsMenu').querySelectorAll('[data-columns]').forEach(b => b.classList.toggle('active', Number(b.dataset.columns) === columns));
     renderList();
   }));
@@ -2104,7 +2105,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   document.querySelectorAll('[data-zoom-value]').forEach(button => button.addEventListener('click', () => {
     const zoom = $('detailsZoom');
     zoom.value = button.dataset.zoomValue;
-    $('detailsZoomButton').textContent = `Zoom: ${button.textContent.trim()}`;
+    $('detailsZoomButton').textContent = `${tr('zoom', 'Zoom')}: ${button.textContent.trim()}`;
     document.querySelectorAll('[data-zoom-value]').forEach(item => item.classList.toggle('active', item === button));
     zoom.dispatchEvent(new Event('change', { bubbles: true }));
   }));
@@ -2157,6 +2158,18 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   });
   $('detailsZoom').addEventListener('change', () => { if (isDetails()) void renderDetailsPage(); });
   window.addEventListener('resize', () => { if (isDetails()) void renderDetailsPage(); });
+
+  document.addEventListener('pdf-editor-language-change', () => {
+    // Refresh only text that is generated dynamically; keep page state and event listeners.
+    updateButtons();
+    $('columnsButton').innerHTML = `<i class="bi bi-grid-3x3-gap me-1"></i>${tr('columns', 'Columns')}: ${columns}`;
+    $('detailsZoomButton').textContent = `${tr('zoom', 'Zoom')}: ${$('detailsZoom').value}%`;
+    if (isDetails()) $('pagePosition').textContent = `${tr('page', 'Page')} ${indexOf(detailsId) + 1} / ${pages.length}`;
+    $('pages').querySelectorAll('[id^="pageLabel_"]').forEach(label => {
+      const number = label.textContent.match(/\\d+$/)?.[0];
+      if (number) label.textContent = `${tr('page', 'Page')} ${number}`;
+    });
+  });
 
   renderList();
 
