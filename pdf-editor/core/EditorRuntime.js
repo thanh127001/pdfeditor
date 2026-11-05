@@ -1838,19 +1838,26 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const local=resizePointerDelta(dx,dy,g.original.angle,shapeLayer);
       Object.assign(item,proportionalCornerResize(g.original,g.mode,local.dx,local.dy,.2,.2));
       preserveRotatedResizeAnchor(g.original,item,g.mode,shapeLayer);
-    }else{
+    }else if(['n','e','s','w'].includes(g.mode)){
+      // Side handles resize only the corresponding axis; keep the opposite edge fixed.
       const o=g.original,local=resizePointerDelta(dx,dy,o.angle,shapeLayer);
-      const dx=local.dx,dy=local.dy;
-      const left=g.mode.includes('w')?o.x+dx:o.x;
-      const top=g.mode.includes('n')?o.y+dy:o.y;
-      const right=g.mode.includes('e')?o.x+o.width+dx:o.x+o.width;
-      const bottom=g.mode.includes('s')?o.y+o.height+dy:o.y+o.height;
-      item.x=Math.max(0,Math.min(99.8,Math.min(left,right)));
-      item.y=Math.max(0,Math.min(99.8,Math.min(top,bottom)));
-      item.width=Math.max(.2,Math.min(100-item.x,Math.abs(right-left)));
-      item.height=Math.max(.2,Math.min(100-item.y,Math.abs(bottom-top)));
+      const minSize=.2;
+      if(g.mode==='w'){
+        const right=o.x+o.width;
+        item.x=Math.max(0,Math.min(right-minSize,o.x+local.dx));
+        item.width=right-item.x;
+      }else if(g.mode==='e'){
+        item.x=o.x;
+        item.width=Math.max(minSize,Math.min(100-o.x,o.width+local.dx));
+      }else if(g.mode==='n'){
+        const bottom=o.y+o.height;
+        item.y=Math.max(0,Math.min(bottom-minSize,o.y+local.dy));
+        item.height=bottom-item.y;
+      }else{
+        item.y=o.y;
+        item.height=Math.max(minSize,Math.min(100-o.y,o.height+local.dy));
+      }
       preserveRotatedResizeAnchor(o,item,g.mode,shapeLayer);
-
     }
     renderShapes();updateButtons();
   });
