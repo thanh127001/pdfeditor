@@ -125,11 +125,11 @@
           <button id="undoBtnDetails" type="button" class="btn btn-outline-secondary" disabled><i class="bi bi-arrow-counterclockwise me-1"></i>Undo</button>
         </div></div>
       </div>
+      <div id="pageDetailsToolOptions" class="row g-2 align-items-center mt-1 d-none" aria-live="polite">
+        <div class="col-12"><div id="pageDetailsToolOptionsContent" class="d-flex flex-wrap align-items-center gap-3"></div></div>
+      </div>
     </div>
     <div id="pageDetailsScrollArea" class="flex-grow-1 overflow-auto">
-    <div id="pageDetailsToolOptions" class="position-sticky top-0 z-3 bg-body border-bottom p-2 d-none" aria-live="polite">
-      <div id="pageDetailsToolOptionsContent" class="d-flex flex-wrap align-items-center gap-3"></div>
-    </div>
     <div id="editorPage" class="bg-body-tertiary rounded my-3 p-3"><div id="detailsPaper" class="mx-auto bg-white shadow rounded overflow-hidden position-relative"><canvas id="detailsCanvas" class="d-block" aria-label="Selected PDF page"></canvas><div id="highlightLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="textLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="imageLayer" class="position-absolute top-0 start-0 w-100 h-100"></div><div id="shapeLayer" class="position-absolute top-0 start-0 w-100 h-100"></div></div></div><textarea id="editorText" class="d-none" aria-hidden="true"></textarea>
     </div>
   </section>
