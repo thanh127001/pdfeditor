@@ -1997,7 +1997,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const obj={id:`image-${++imageCounter}`,src:pendingImage.src,
       ...bounds,aspectPage:pendingImage.aspect/imagePageRatio(),
       keepRatio:true,angle:imageDefaults.angle,flipH:imageDefaults.flipH,flipV:imageDefaults.flipV};
-    recordPageEdit(page);(page.images ||= []).push(obj);pendingImage=null;selectImage(obj.id);updateButtons();
+    recordPageEdit(page);(page.images ||= []).push(obj);selectImage(obj.id);updateButtons();
   });
   imageLayer.addEventListener('pointercancel',e=>{
     if(imageCreate?.id===e.pointerId){imageCreate=null;imageCreatePreview.style.display='none';}
