@@ -880,84 +880,8 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     }
     return false;
   }
-  // Automatically activate the matching tool when an existing annotation is clicked.
-  // This runs in capture phase, before a different drawing tool can create an object.
-  let blankDetailsClick = null;
-  function handleBlankDetailsClick(hadSelection) {
-    // First blank click deselects an object without changing the drawing tool.
-    // Only a subsequent blank click, with nothing selected, returns to Hold.
-    if (!hadSelection && activeDetailsTool !== 'SelectText') activeDetailsTool = null;
-    selectedHighlightId = null; selectedTextId = null; selectedImageId = null; selectedShapeId = null;
-    if (!hadSelection) pendingImage = null;
-    updateDetailsToolSelection();
-    renderHighlights(); renderTexts(); renderImages(); renderShapes(); updateButtons();
-  }
-  function hasSelectedDetailsObject() {
-    return selectedHighlightId !== null || selectedTextId !== null ||
-      selectedImageId !== null || selectedShapeId !== null;
-  }
-  $('pageDetailsScrollArea').addEventListener('pointerdown', e => {
-    if (!isDetails() || busy || e.button !== 0 || !activeDetailsTool || activeDetailsTool === 'SelectText' || e.target.closest('[data-object-delete]')) return;
-    const rect = $('detailsPaper').getBoundingClientRect();
-    if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
-      blankDetailsClick = {id:e.pointerId,x:e.clientX,y:e.clientY,hadSelection:hasSelectedDetailsObject()};
-    }
-  }, true);
-  document.addEventListener('pointerup', e => {
-    const g = blankDetailsClick;
-    if (!g || g.id !== e.pointerId) return;
-    blankDetailsClick = null;
-    if (Math.hypot(e.clientX-g.x,e.clientY-g.y) < 4) queueMicrotask(() => handleBlankDetailsClick(g.hadSelection));
-  });
-  document.addEventListener('pointercancel', e => {
-    if (blankDetailsClick?.id === e.pointerId) blankDetailsClick = null;
-  });
-  $('detailsPaper').addEventListener('pointerdown', e => {
-    if (busy || e.button !== 0 || !isDetails() || activeDetailsTool === 'SelectText' || e.target.closest('[data-object-delete]')) return;
-    const page = currentPage();
-    if (!page) return;
-    const x = e.clientX, y = e.clientY;
-    const inside = rect => x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
-    const candidates = [
-      ['shapeLayer', '[data-shape-id]', 'shapeId', id => (page.shapes || []).find(o => o.id === id)?.type],
-      ['imageLayer', '[data-image-id]', 'imageId', () => 'Image'],
-      ['textLayer', '[data-text-id]', 'textId', () => 'Text'],
-      ['highlightLayer', '[data-highlight-id]', 'highlightId', () => 'Highlight']
-    ];
-    let match = null;
-    for (const [layerId, selector, key, typeFor] of candidates) {
-      const nodes = [...$(layerId).querySelectorAll(selector)].reverse();
-      for (const node of nodes) {
-        const type = typeFor(node.dataset[key]);
-        if(type==='Draw'){
-          const draw=(page.shapes||[]).find(v=>v.id===node.dataset[key]);
-          const handle=e.target.closest('[data-shape-handle]')?.closest('[data-shape-id]')===node;
-          if(!draw||(!handle&&!drawHit(draw,x,y)))continue;
-        }else if (!inside(node.getBoundingClientRect())) continue;
-        if (!type) continue;
-        match = {type, id: node.dataset[key]};
-        break;
-      }
-      if (match) break;
-    }
-    if (!match) {
-      if (activeDetailsTool) blankDetailsClick = {id:e.pointerId,x:e.clientX,y:e.clientY,hadSelection:hasSelectedDetailsObject()};
-      return;
-    }
-    blankDetailsClick = null;
-    if (match.type === activeDetailsTool) return;
-    // Select the clicked annotation, and refresh all tool-specific controls.
-    activeDetailsTool = match.type;
-    selectedHighlightId = match.type === 'Highlight' ? match.id : null;
-    selectedTextId = match.type === 'Text' ? match.id : null;
-    selectedImageId = match.type === 'Image' ? match.id : null;
-    selectedShapeId = ['Line','Draw','Rectangle','Ellipse'].includes(match.type) ? match.id : null;
-    pendingImage = null;
-    updateDetailsToolSelection();
-    renderHighlights(); renderTexts(); renderImages(); renderShapes(); updateButtons();
-    e.preventDefault();
-    e.stopPropagation();
-  }, true);
+  // Tool selection is explicit: blank clicks and other annotation types never switch tools.
+  // Each annotation layer already accepts pointer input only for its active tool.
 
   // Highlight coordinates are percentages of the rendered page, so zoom and
   // page reordering do not change annotation geometry or ownership.
@@ -1227,7 +1151,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   const currentText = () => (currentPage()?.texts || []).find(t => t.id === selectedTextId);
   function selectText(id) {
     selectedTextId = id;
-    if (id) { activeDetailsTool = 'Text'; selectedHighlightId = null; }
+    if (id && activeDetailsTool !== 'Text') return;
     updateDetailsToolSelection(); renderHighlights(); renderTexts();
   }
   function textBackground(t) {
@@ -1542,10 +1466,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   function selectShape(id) {
     selectedShapeId = id;
     const item = currentShape();
-    if (item) {
-      activeDetailsTool = item.type;
-      selectedHighlightId = null; selectedTextId = null; selectedImageId = null;
-    }
+    if (item && item.type !== activeDetailsTool) { selectedShapeId = null; return; }
     updateDetailsToolSelection(); renderHighlights(); renderTexts(); renderImages(); renderShapes();
   }
   function shapePoint(e) {
@@ -1899,7 +1820,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   function currentImage() { return (currentPage()?.images || []).find(i => i.id === selectedImageId); }
   function selectImage(id) {
     selectedImageId = id;
-    if (id) { activeDetailsTool = 'Image'; selectedHighlightId = null; selectedTextId = null; }
+    if (id && activeDetailsTool !== 'Image') return;
     updateDetailsToolSelection(); renderHighlights(); renderTexts(); renderImages();
   }
   function imagePagePixels() {
