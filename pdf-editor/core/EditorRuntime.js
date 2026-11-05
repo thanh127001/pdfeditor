@@ -57,6 +57,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     $('clearSelection').innerHTML = `<i class="bi bi-x-circle me-1"></i>${tr('clearSelection', 'Clear Selection')} (${s})`;
     $('previous').disabled = busy || indexOf(detailsId) <= 0;
     $('next').disabled = busy || indexOf(detailsId) < 0 || indexOf(detailsId) >= n - 1;
+    syncDetailsObjectDelete();
   }
   function setView(details) {
     if(details) thisEditor.pageManager.open(detailsId); else thisEditor.pageManager.back();
@@ -751,6 +752,38 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     Highlight: 'Highlight options', Text: 'Text options', Image: 'Image options',
     Line: 'Line options', Draw: 'Draw options', Rectangle: 'Rectangle options', Ellipse: 'Ellipse options'
   };
+  function syncDetailsObjectDelete() {
+    const button = $('deleteDetailsObject');
+    const page = currentPage();
+    const selectedObject = page && (
+      activeDetailsTool === 'Highlight' ? (page.highlights||[]).some(v=>v.id===selectedHighlightId) :
+      activeDetailsTool === 'Text' ? (page.texts||[]).some(v=>v.id===selectedTextId) :
+      activeDetailsTool === 'Image' ? (page.images||[]).some(v=>v.id===selectedImageId) :
+      ['Line','Draw','Rectangle','Ellipse'].includes(activeDetailsTool) ?
+        (page.shapes||[]).some(v=>v.id===selectedShapeId && v.type===activeDetailsTool) : false
+    );
+    button.classList.toggle('d-none', !selectedObject);
+    button.disabled = busy || !selectedObject;
+  }
+  $('deleteDetailsObject').addEventListener('click', () => {
+    if(busy)return;
+    const page=currentPage();if(!page)return;
+    let collection, id;
+    if(activeDetailsTool==='Highlight'){collection='highlights';id=selectedHighlightId;}
+    else if(activeDetailsTool==='Text'){collection='texts';id=selectedTextId;}
+    else if(activeDetailsTool==='Image'){collection='images';id=selectedImageId;}
+    else if(['Line','Draw','Rectangle','Ellipse'].includes(activeDetailsTool)){collection='shapes';id=selectedShapeId;}
+    else return;
+    if(!id || !(page[collection]||[]).some(v=>v.id===id && (collection!=='shapes'||v.type===activeDetailsTool)))return;
+    recordPageEdit(page);
+    page[collection]=page[collection].filter(v=>v.id!==id);
+    if(collection==='highlights')selectedHighlightId=null;
+    else if(collection==='texts')selectedTextId=null;
+    else if(collection==='images')selectedImageId=null;
+    else selectedShapeId=null;
+    updateDetailsToolSelection();
+    renderHighlights();renderTexts();renderImages();renderShapes();updateButtons();
+  });
   function updateDetailsToolSelection() {
     // Page Size is a page command, not a registered drawing tool.
     const drawingTool = ['PageSize', 'SelectText'].includes(activeDetailsTool) ? null : activeDetailsTool;
@@ -772,6 +805,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     row.classList.toggle('d-none', false);
     const content = $('pageDetailsToolOptionsContent');
     content.replaceChildren();
+    syncDetailsObjectDelete();
     if (!activeDetailsTool) {
       return;
     }
@@ -936,6 +970,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     return (currentPage()?.highlights || []).find(h => h.id === selectedHighlightId);
   }
   function renderHighlightOptions() {
+    syncDetailsObjectDelete();
     if (activeDetailsTool !== 'Highlight') return;
     const content = $('pageDetailsToolOptionsContent');
     content.replaceChildren();
@@ -1030,17 +1065,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     updated.x+=(before.x-after.x)/layer.clientWidth;
     updated.y+=(before.y-after.y)/layer.clientHeight;
   }
-  function appendObjectDeleteButton(box,label,onDelete,offset=0){
-    const b=document.createElement('button');b.type='button';
-    b.className='position-absolute d-flex align-items-center justify-content-center bg-white border border-danger rounded-circle text-danger';
-    b.style.cssText='width:24px;height:24px;top:50%;left:calc(100% + 18px);transform:translateY(-50%);z-index:20;cursor:pointer;touch-action:none;padding:0;pointer-events:auto';
-    b.title='Delete '+label;b.setAttribute('aria-label','Delete '+label);
-    b.dataset.objectDelete = 'true';
-    b.innerHTML='<i class="bi bi-trash" style="font-size:13px;pointer-events:none"></i>';
-    for(const name of ['pointerdown','mousedown','touchstart','dblclick'])b.addEventListener(name,e=>e.stopPropagation());
-    b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();onDelete();});
-    box.append(b);
-  }
   function renderHighlights() {
     const layer = $('highlightLayer');
     layer.replaceChildren();
@@ -1071,7 +1095,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
           el.append(handle);
         }
       }
-      if(h.id===selectedHighlightId)appendObjectDeleteButton(el,'Highlight',()=>{recordPageEdit(currentPage());currentPage().highlights=currentPage().highlights.filter(v=>v.id!==h.id);selectedHighlightId=null;renderHighlightOptions();renderHighlights();updateButtons();});
       layer.append(el);
     }
   }
@@ -1241,6 +1264,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     applyTextAlignment(field,obj);
   }
   function renderTextOptions() {
+    syncDetailsObjectDelete();
     if (activeDetailsTool !== 'Text') return;
     const content = $('pageDetailsToolOptionsContent'); content.replaceChildren();
     const obj = currentText(), settings = obj || textDefaults;
@@ -1387,7 +1411,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         rotateHandle.innerHTML='<i class="bi bi-arrow-clockwise text-primary" style="font-size:12px;pointer-events:none"></i>';
         box.append(rotateHandle);
       }
-      if(t.id===selectedTextId)appendObjectDeleteButton(box,'Text',()=>{recordPageEdit(currentPage());currentPage().texts=currentPage().texts.filter(v=>v.id!==t.id);selectedTextId=null;renderTextOptions();renderTexts();updateButtons();});
       textLayer.append(box);
       applyTextAlignment(textarea,t);
     }
@@ -1534,6 +1557,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       y: Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100)) };
   }
   function renderShapeOptions() {
+    syncDetailsObjectDelete();
     if (!shapeTools.includes(activeDetailsTool)) return;
     const content = $('pageDetailsToolOptionsContent'); content.replaceChildren();
     const obj = currentShape(), options = obj || currentShapeDefaults();
@@ -1620,11 +1644,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
           rotate.style.cssText='width:22px;height:22px;left:calc(50% - 11px);bottom:calc(100% + 22px);cursor:grab;touch-action:none;z-index:6';
           rotate.title='Drag to rotate draw';rotate.innerHTML='<i class="bi bi-arrow-clockwise text-primary" style="font-size:12px;pointer-events:none"></i>';
           box.append(rotate);
-          appendObjectDeleteButton(box,'Draw',()=>{
-            recordPageEdit(currentPage());
-            currentPage().shapes=currentPage().shapes.filter(v=>v.id!==item.id);
-            selectedShapeId=null;renderShapeOptions();renderShapes();updateButtons();
-          });
         }
         shapeLayer.append(box);continue;
       }
@@ -1709,30 +1728,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         rotate.style.cssText='width:22px;height:22px;left:calc(50% - 11px);bottom:calc(100% + 22px);cursor:grab;touch-action:none;z-index:6';
         rotate.title='Drag to rotate '+item.type.toLowerCase();rotate.innerHTML='<i class="bi bi-arrow-clockwise text-primary" style="font-size:12px;pointer-events:none"></i>';
         box.append(rotate);
-      }
-      if(item.id===selectedShapeId&&item.type===activeDetailsTool){
-        const deleteShape=()=>{recordPageEdit(currentPage());currentPage().shapes=currentPage().shapes.filter(v=>v.id!==item.id);selectedShapeId=null;renderShapeOptions();renderShapes();updateButtons();};
-        if(item.type==='Line'){
-          // Keep Delete anchored to the line-end handle, even when the line
-          // crosses horizontal or vertical axes. Never choose an endpoint
-          // based on which one is currently farther right.
-          const width=shapeLayer.clientWidth*item.width/100;
-          const height=shapeLayer.clientHeight*item.height/100;
-          const dx=item.reverseX?-width:width;
-          const dy=item.reverseY?-height:height;
-          const angle=Math.atan2(dy,dx)*180/Math.PI;
-          const anchor=document.createElement('div');
-          anchor.className='position-absolute';
-          anchor.style.cssText='left:'+(item.width===0?'50%':item.reverseX?'0':'100%')+
-            ';top:'+(item.height===0?'50%':item.reverseY?'0':'100%')+
-            ';width:0;height:0;transform:rotate('+angle+'deg)';
-          appendObjectDeleteButton(anchor,'Line',deleteShape);
-          const button=anchor.querySelector('button');
-          button.style.left='18px';
-          button.style.top='-12px';
-          button.style.transform='none';
-          box.append(anchor);
-        }else appendObjectDeleteButton(box,item.type,deleteShape,shapeStrokePixels(item));
       }
       shapeLayer.append(box);
     }
@@ -1898,6 +1893,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     return { width: obj.width * page.width / 100, height: obj.height * page.height / 100 };
   }
   function renderImageOptions() {
+    syncDetailsObjectDelete();
     if (activeDetailsTool !== 'Image') return;
     const content = $('pageDetailsToolOptionsContent'); content.replaceChildren();
     const obj = currentImage();
@@ -1977,7 +1973,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         rotateHandle.title='Drag to rotate image';rotateHandle.innerHTML='<i class="bi bi-arrow-clockwise text-primary" style="font-size:12px"></i>';
         box.append(rotateHandle);
       }
-      if(obj.id===selectedImageId)appendObjectDeleteButton(box,'Image',()=>{recordPageEdit(currentPage());currentPage().images=currentPage().images.filter(v=>v.id!==obj.id);selectedImageId=null;renderImageOptions();renderImages();updateButtons();});
       imageLayer.append(box);
     }
   }
