@@ -162,28 +162,13 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     }
     updateButtons();
   }
-  function clearDropMarkers() { $('pages').querySelectorAll('.border-start,.border-end').forEach(e => e.classList.remove('border-start','border-end','border-primary','border-5')); $('pages').querySelectorAll('.drop-edge-indicator').forEach(e => e.remove()); }
+  function clearDropMarkers() { $('pages').querySelectorAll('.border-start,.border-end').forEach(e => e.classList.remove('border-start','border-end','border-primary','border-5')); }
   function showDropGap(index) {
     dropIndex = index; clearDropMarkers();
     const cols = [...$('pages').children];
     if (!cols.length) return;
-    // At the outer boundaries, draw the indicator inside the card so the
-    // grid gutter / scroll viewport cannot clip the first or last drop target.
-    if (index === 0 || index === cols.length) {
-      const col = index === 0 ? cols[0] : cols[cols.length - 1];
-      const card = col.querySelector('.page-card');
-      if (!card) return;
-      const marker = document.createElement('div');
-      marker.className = 'drop-edge-indicator position-absolute top-0 bottom-0 bg-primary rounded pe-none';
-      marker.style.width = '5px';
-      marker.style.zIndex = '5';
-      // Match the between-page indicator: put the line just outside the card,
-      // halfway into the Bootstrap grid gutter rather than over its content.
-      marker.style[index === 0 ? 'left' : 'right'] = '-8px';
-      card.append(marker);
-      return;
-    }
-    cols[index]?.classList.add('border-start','border-primary','border-5');
+    if (index === cols.length) cols[cols.length - 1].classList.add('border-end','border-primary','border-5');
+    else cols[index]?.classList.add('border-start','border-primary','border-5');
   }
   function findGap(x,y) {
     const cols = [...$('pages').children]; if (!cols.length) return;
