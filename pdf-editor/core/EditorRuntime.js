@@ -177,7 +177,9 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       marker.className = 'drop-edge-indicator position-absolute top-0 bottom-0 bg-primary rounded pe-none';
       marker.style.width = '5px';
       marker.style.zIndex = '5';
-      marker.style[index === 0 ? 'left' : 'right'] = '0';
+      // Match the between-page indicator: put the line just outside the card,
+      // halfway into the Bootstrap grid gutter rather than over its content.
+      marker.style[index === 0 ? 'left' : 'right'] = '-8px';
       card.append(marker);
       return;
     }
