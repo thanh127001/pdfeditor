@@ -702,9 +702,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const content = $('pageDetailsToolOptionsContent');
     content.replaceChildren();
     if (!activeDetailsTool) {
-      const hint=document.createElement('span');hint.className='small text-secondary w-100';
-      hint.textContent='Drag the page to pan around the document.';
-      content.append(hint);return;
+      return;
     }
     if (activeDetailsTool === 'PageSize') {
       const label = document.createElement('label');
@@ -714,9 +712,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       const select = pageSizeSelect;
       void syncPageSizeSelection();
       content.append(label, select);
-      const hint=document.createElement('span');hint.className='small text-secondary w-100';
-      hint.textContent='Choose a page size to resize the current page.';
-      content.append(hint);
       return;
     }
     if (activeDetailsTool === 'Highlight') { renderHighlightOptions(); return; }
@@ -937,10 +932,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     makeControl('Height', 'range', 'highlightHeight', settings.height, 0.5, 15, 0.5);
     makeControl('Color', 'color', 'highlightColor', settings.color);
     makeControl('Opacity', 'range', 'highlightOpacity', settings.opacity, 5, 100, 5);
-    const hint = document.createElement('span');
-    hint.className = 'small text-secondary w-100';
-    hint.textContent = 'Drag horizontally on the page to highlight text.';
-    content.append(hint);
   }
   const OBJECT_HANDLE_SIZE=12;
   function styleObjectCornerHandle(handle,corner,offset=0){
@@ -1288,8 +1279,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       }
       group.append(label,buttons);content.append(group);
     }
-    const hint=document.createElement('span'); hint.className='small text-secondary w-100';
-    hint.textContent='Click the page to add text. Edit the text, or drag its box to move it.'; content.append(hint);
   }
   function renderTexts() {
     textLayer.replaceChildren();
@@ -1542,13 +1531,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       });
       group.append(input,label);content.append(group);
     }
-    const hint=document.createElement('div');hint.className='w-100 small text-secondary';
-    hint.textContent=activeDetailsTool==='Line'
-      ?'Drag to draw a line. Drag an endpoint to resize, or drag the line to move.'
-      :activeDetailsTool==='Draw'
-      ?'Drag on the page to draw freely. Drag a stroke to move it.'
-      :'Drag to draw a '+activeDetailsTool.toLowerCase()+'. Drag the object to move it, or drag its handles to resize.';
-    content.append(hint);
   }
   function renderShapes() {
     shapeLayer.replaceChildren();
@@ -1888,9 +1870,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       transformGroup.append(flipH,flipV);
       content.append(transformGroup);
     }
-    const hint=document.createElement('span');hint.className='small text-secondary w-100';
-    hint.textContent='Choose an image, then click the page to place it. Drag the image to move it, or use its handles to resize or rotate.';
-    content.append(hint);
   }
   imageInput.addEventListener('change', async ()=>{
     const file=imageInput.files?.[0];imageInput.value='';if(!file)return;
