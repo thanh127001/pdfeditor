@@ -1896,7 +1896,9 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   });
   function imagePageRatio() { const r=$('detailsPaper').getBoundingClientRect();return r.width/Math.max(1,r.height); }
   function renderImages() {
-    imageLayer.replaceChildren();imageLayer.style.pointerEvents=activeDetailsTool==='Image'?'auto':'none';
+    imageLayer.replaceChildren();
+    if (imageCreate) imageLayer.append(imageCreatePreview);
+    imageLayer.style.pointerEvents=activeDetailsTool==='Image'?'auto':'none';
     for(const obj of currentPage()?.images||[]) {
       const box=document.createElement('div');box.dataset.imageId=obj.id;
       box.className='position-absolute';box.style.left=`${obj.x}%`;box.style.top=`${obj.y}%`;
@@ -1936,12 +1938,36 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   }
   function imagePoint(e){const r=imageLayer.getBoundingClientRect();return {x:Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100)),y:Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100))};}
   let imageCreate = null;
+  // A temporary outline is shown while dragging; no PDF object is created until release.
+  const imageCreatePreview = document.createElement('div');
+  imageCreatePreview.className = 'position-absolute border border-2 border-primary';
+  imageCreatePreview.style.cssText = 'position:absolute;display:none;pointer-events:none;box-sizing:border-box;border-style:dashed!important;z-index:10;';
+  imageLayer.append(imageCreatePreview);
+  function imageCreateBounds(start,end,aspect) {
+    const ratio = aspect / imagePageRatio();
+    const dx=end.x-start.x,dy=end.y-start.y;
+    const maxW=Math.abs(dx),maxH=Math.abs(dy);
+    const width=Math.min(maxW,maxH*ratio);
+    const height=width/ratio;
+    return {x:Math.max(0,Math.min(100-width,start.x+(dx<0?-width:0))),
+      y:Math.max(0,Math.min(100-height,start.y+(dy<0?-height:0))),
+      width,height};
+  }
+  function updateImageCreatePreview(bounds) {
+    imageCreatePreview.style.left=bounds.x+'%';
+    imageCreatePreview.style.top=bounds.y+'%';
+    imageCreatePreview.style.width=bounds.width+'%';
+    imageCreatePreview.style.height=bounds.height+'%';
+    imageCreatePreview.style.display='block';
+  }
   imageLayer.addEventListener('pointerdown',e=>{
     if(activeDetailsTool!=='Image'||busy||e.button!==0)return;
     const hit=e.target.closest('[data-image-id]');
     if (!hit) {
       if (!pendingImage) return;
       imageCreate = {id:e.pointerId,pageId:detailsId,start:imagePoint(e)};
+      imageLayer.append(imageCreatePreview);
+      imageCreatePreview.style.display='none';
       imageLayer.setPointerCapture(e.pointerId);
       e.preventDefault();
       return;
@@ -1960,22 +1986,28 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     const g=imageCreate;
     if(!g||g.id!==e.pointerId)return;
     imageCreate=null;
+    imageCreatePreview.style.display='none';
     if(imageLayer.hasPointerCapture(e.pointerId))imageLayer.releasePointerCapture(e.pointerId);
     if(g.pageId!==detailsId||!pendingImage)return;
     const p=imagePoint(e),r=imageLayer.getBoundingClientRect();
-    if(Math.hypot((p.x-g.start.x)*r.width/100,(p.y-g.start.y)*r.height/100)<4)return;
+    const bounds=imageCreateBounds(g.start,p,pendingImage.aspect);
+    if(Math.hypot((p.x-g.start.x)*r.width/100,(p.y-g.start.y)*r.height/100)<4 ||
+       bounds.width*r.width/100<4 || bounds.height*r.height/100<4)return;
     const page=currentPage();if(!page)return;
-    const width=Math.abs(p.x-g.start.x),aspectPage=pendingImage.aspect/imagePageRatio();
-    const height=width/aspectPage,fit=Math.min(1,100/Math.max(width,.001),100/Math.max(height,.001));
-    const w=Math.max(.2,width*fit),h=Math.max(.2,height*fit);
     const obj={id:`image-${++imageCounter}`,src:pendingImage.src,
-      x:Math.max(0,Math.min(100-w,Math.min(g.start.x,p.x))),
-      y:Math.max(0,Math.min(100-h,Math.min(g.start.y,p.y))),width:w,height:h,aspectPage,
-      keepRatio:imageDefaults.keepRatio,angle:imageDefaults.angle,flipH:imageDefaults.flipH,flipV:imageDefaults.flipV};
+      ...bounds,aspectPage:pendingImage.aspect/imagePageRatio(),
+      keepRatio:true,angle:imageDefaults.angle,flipH:imageDefaults.flipH,flipV:imageDefaults.flipV};
     recordPageEdit(page);(page.images ||= []).push(obj);pendingImage=null;selectImage(obj.id);updateButtons();
   });
-  imageLayer.addEventListener('pointercancel',e=>{if(imageCreate?.id===e.pointerId)imageCreate=null;});
+  imageLayer.addEventListener('pointercancel',e=>{
+    if(imageCreate?.id===e.pointerId){imageCreate=null;imageCreatePreview.style.display='none';}
+  });
   imageLayer.addEventListener('pointermove',e=>{
+    if(imageCreate?.id===e.pointerId && imageCreate.pageId===detailsId && pendingImage){
+      updateImageCreatePreview(imageCreateBounds(imageCreate.start,imagePoint(e),pendingImage.aspect));
+      e.preventDefault();
+      return;
+    }
     const g=imageGesture;if(!g||g.pageId!==detailsId)return;
     const obj=currentImage();if(!obj)return;
     const pt=imagePoint(e),dx=pt.x-g.start.x,dy=pt.y-g.start.y;
