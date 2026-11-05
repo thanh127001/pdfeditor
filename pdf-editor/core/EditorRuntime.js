@@ -1368,6 +1368,8 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     if(activeDetailsTool!=='Text'||busy||e.button!==0)return;
     const hit=e.target.closest('[data-text-id]');
     if (!hit) {
+      // Deselect the current text on blank space, but keep the Text tool active.
+      if (selectedTextId !== null) selectText(null);
       textCreate = {id:e.pointerId,pageId:detailsId,start:textPoint(e)};
       textLayer.append(textCreatePreview);
       textCreatePreview.style.display='none';
