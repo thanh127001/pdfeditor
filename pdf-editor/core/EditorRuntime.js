@@ -880,6 +880,53 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     }
     return false;
   }
+  // Passive hover identification, independent of the currently active editing tool.
+  const objectHoverTag = document.createElement('span');
+  objectHoverTag.className = 'badge text-bg-dark position-fixed pe-none d-none';
+  objectHoverTag.style.zIndex = '2000';
+  objectHoverTag.style.pointerEvents = 'none';
+  document.body.append(objectHoverTag);
+  const hideObjectHoverTag = () => objectHoverTag.classList.add('d-none');
+  $('pageDetailsScrollArea').addEventListener('pointermove', event => {
+    if (!isDetails() || event.pointerType === 'touch') { hideObjectHoverTag(); return; }
+    const page = currentPage();
+    const x = event.clientX, y = event.clientY;
+    const inside = node => {
+      const r = node.getBoundingClientRect();
+      return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+    };
+    let type = null;
+    const groups = [
+      ['shapeLayer', '[data-shape-id]', node => (page?.shapes || []).find(o => o.id === node.dataset.shapeId)?.type],
+      ['imageLayer', '[data-image-id]', () => 'Image'],
+      ['textLayer', '[data-text-id]', () => 'Text'],
+      ['highlightLayer', '[data-highlight-id]', () => 'Highlight']
+    ];
+    const paper = $('detailsPaper').getBoundingClientRect();
+    if (x >= paper.left && x <= paper.right && y >= paper.top && y <= paper.bottom) {
+      for (const [layerId, selector, getType] of groups) {
+        for (const node of [...$(layerId).querySelectorAll(selector)].reverse()) {
+          if (!inside(node)) continue;
+          const candidate = getType(node);
+          if (candidate === 'Draw') {
+            const draw = (page?.shapes || []).find(o => o.id === node.dataset.shapeId);
+            if (!draw || !drawHit(draw, x, y)) continue;
+          }
+          if (candidate) { type = candidate; break; }
+        }
+        if (type) break;
+      }
+    }
+    if (!type) { hideObjectHoverTag(); return; }
+    objectHoverTag.textContent = type;
+    objectHoverTag.classList.remove('d-none');
+    const width = objectHoverTag.offsetWidth, height = objectHoverTag.offsetHeight;
+    objectHoverTag.style.left = Math.max(4, Math.min(x + 14, window.innerWidth - width - 4)) + 'px';
+    objectHoverTag.style.top = Math.max(4, Math.min(y + 18, window.innerHeight - height - 4)) + 'px';
+  });
+  $('pageDetailsScrollArea').addEventListener('pointerleave', hideObjectHoverTag);
+  $('pageDetailsSection').addEventListener('pointerleave', hideObjectHoverTag);
+
   // Tool selection is explicit: blank clicks and other annotation types never switch tools.
   // Each annotation layer already accepts pointer input only for its active tool.
 
