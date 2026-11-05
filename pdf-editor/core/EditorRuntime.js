@@ -758,6 +758,19 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   const holdScrollArea = $('pageDetailsScrollArea');
   holdViewport.addEventListener('pointerdown', e => {
     if (activeDetailsTool || !isDetails() || e.button !== 0 || !e.isPrimary) return;
+    // Let the page's annotation hit-test activate its editing tool in Hold mode.
+    const hitAnnotation = ['highlightLayer','textLayer','imageLayer','shapeLayer'].some(layerId =>
+      [...$(layerId).querySelectorAll('[data-highlight-id],[data-text-id],[data-image-id],[data-shape-id]')]
+        .some(node => {
+          const rect=node.getBoundingClientRect();
+          if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom)return false;
+          if(node.dataset.shapeId){
+            const item=(currentPage()?.shapes||[]).find(v=>v.id===node.dataset.shapeId);
+            return item?.type!=='Draw'||drawHit(item,e.clientX,e.clientY);
+          }
+          return true;
+        }));
+    if (hitAnnotation) return;
     holdDrag = { id: e.pointerId, x: e.clientX, y: e.clientY, left: holdScrollArea.scrollLeft, top: holdScrollArea.scrollTop };
     holdViewport.setPointerCapture(e.pointerId);
     holdViewport.style.cursor = 'grabbing';
