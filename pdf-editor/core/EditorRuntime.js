@@ -801,7 +801,8 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     $('editorPage').style.touchAction = holding ? 'none' : '';
     syncOcrLayer();
     const row = $('pageDetailsToolOptions');
-    row.classList.toggle('d-none', false);
+    // The entire options row controls visibility; its Delete button only changes disabled state.
+    row.classList.toggle('d-none', !activeDetailsTool);
     const content = $('pageDetailsToolOptionsFields');
     content.replaceChildren();
     syncDetailsObjectDelete();
