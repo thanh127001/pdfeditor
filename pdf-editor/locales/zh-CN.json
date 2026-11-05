@@ -48,5 +48,10 @@
   "chooseTheme": "选择主题",
   "english": "English",
   "chinese": "简体中文",
-  "vietnamese": "Tiếng Việt"
+  "vietnamese": "Tiếng Việt",
+  "details": "详情",
+  "previewPage": "预览页面",
+  "pageSizeTitle": "页面尺寸",
+  "addToSelection": "将页面加入多选",
+  "removeFromSelection": "从多选中移除页面"
 }
