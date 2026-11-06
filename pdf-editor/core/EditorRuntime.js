@@ -1629,6 +1629,9 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     shapeLayer.style.pointerEvents=shapeTools.includes(activeDetailsTool)?'auto':'none';
     const NS='http://www.w3.org/2000/svg';
     for(const item of currentPage()?.shapes||[]) {
+      // Do not show a newly created shape until the pointer has actually been dragged.
+      // A simple click leaves the page visually unchanged, just like Image creation.
+      if (shapeGesture?.mode === 'create' && shapeGesture.id === item.id && !shapeGesture.moved) continue;
       if(item.type==='Draw'){
         const box=document.createElement('div');box.className='position-absolute';
         box.dataset.shapeId=item.id;
