@@ -1014,9 +1014,15 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       input.addEventListener('input', () => {
         if (selectedObject && !saved) { recordPageEdit(currentPage()); saved = true; }
         const key = id === 'highlightHeight' ? 'height' : id === 'highlightColor' ? 'color' : 'opacity';
-        (selectedObject || highlightDefaults)[key] = isHeight
-          ? Number(input.value)/pageHeight*100
+        const target = selectedObject || highlightDefaults;
+        const nextValue = isHeight ? Number(input.value)/pageHeight*100
           : type === 'range' ? Number(input.value) : input.value;
+        if (isHeight && selectedObject) {
+          // Keep the highlight centered while its thickness grows or shrinks.
+          const centerY = selectedObject.y + selectedObject.height / 2;
+          selectedObject.height = Math.min(nextValue, 100);
+          selectedObject.y = Math.max(0, Math.min(100 - selectedObject.height, centerY - selectedObject.height / 2));
+        } else target[key] = nextValue;
         if (type === 'range') output.textContent = input.value+(isHeight?'px':'%');
         renderHighlights(); updateButtons();
       });
@@ -1087,6 +1093,8 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     layer.replaceChildren();
     layer.style.pointerEvents = activeDetailsTool === 'Highlight' ? 'auto' : 'none';
     for (const h of currentPage()?.highlights || []) {
+      // Do not render a tentative highlight until a real drag begins.
+      if (highlightGesture?.mode === 'create' && highlightGesture.id === h.id && !highlightGesture.moved) continue;
       const el = document.createElement('div');
       el.className = 'position-absolute';
       el.dataset.highlightId = h.id;
