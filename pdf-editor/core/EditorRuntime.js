@@ -231,8 +231,15 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     updateButtons();
   }
   // Keep the existing insertion-gap calculation without drawing a destination marker.
+  function clearDropDestinationIcon() {
+    $('pages').querySelectorAll('.page-drop-destination').forEach(icon => icon.classList.add('d-none'));
+  }
   function showDropGap(index) {
+    // Preserve the original insertion index; only the visual feedback changes.
     dropIndex = index;
+    clearDropDestinationIcon();
+    const target = $('pages').children[index];
+    target?.querySelector('.page-drop-destination')?.classList.remove('d-none');
   }
   function findGap(x,y) {
     const cols = [...$('pages').children];
@@ -301,7 +308,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       findGap(e.clientX,e.clientY);
     }
   }
-  function endDrag() { draggingIds = null; dropIndex = null; stopScroll(); $('pages').querySelectorAll('.page-card.opacity-50').forEach(card => card.classList.remove('opacity-50')); setTimeout(() => { suppressClickAfterDrag = false; }, 0); }
+  function endDrag() { draggingIds = null; dropIndex = null; stopScroll(); clearDropDestinationIcon(); $('pages').querySelectorAll('.page-card.opacity-50').forEach(card => card.classList.remove('opacity-50')); setTimeout(() => { suppressClickAfterDrag = false; }, 0); }
   // ISO A-series classification with a 1 mm tolerance for rounded PDF dimensions.
   function pageSizeLabel(size) {
     const mm = 25.4 / 72;
@@ -336,6 +343,10 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       card.draggable = true; // Keep native drag enabled after async PDF import; dragstart checks busy.
       const thumb = document.createElement('div'); thumb.className = 'thumb ratio bg-body-tertiary overflow-hidden rounded-top'; thumb.draggable = false;
       thumb.style.setProperty('--bs-aspect-ratio','141.4%');
+      const destinationIcon = document.createElement('i');
+      destinationIcon.className = 'page-drop-destination bi bi-arrow-left-circle-fill text-success fs-3 position-absolute top-50 start-0 translate-middle-y ms-2 pe-none d-none';
+      destinationIcon.setAttribute('aria-hidden', 'true');
+      thumb.append(destinationIcon);
       const canvas = document.createElement('canvas'); canvas.className = 'position-absolute top-50 start-50 translate-middle mw-100 mh-100 object-fit-contain bg-white shadow-sm'; canvas.draggable = false; canvas.setAttribute('aria-label', `${tr('previewPage', 'Preview page')} ${i + 1}`); thumb.append(canvas);
       const actions = document.createElement('div'); actions.className = 'position-absolute top-0 start-0 w-100 h-100 pe-none d-flex flex-column justify-content-between p-2 gap-2';
       const topActions = document.createElement('div'); topActions.className = 'd-flex flex-wrap align-items-start justify-content-between gap-2';
