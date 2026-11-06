@@ -343,11 +343,15 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       card.draggable = true; // Keep native drag enabled after async PDF import; dragstart checks busy.
       const thumb = document.createElement('div'); thumb.className = 'thumb ratio bg-body-tertiary overflow-hidden rounded-top'; thumb.draggable = false;
       thumb.style.setProperty('--bs-aspect-ratio','141.4%');
+      // Bootstrap .ratio stretches direct children to 100% width/height.
+      // Put the icon inside a full-size overlay so its own positioning remains intact.
+      const destinationOverlay = document.createElement('div');
+      destinationOverlay.className = 'position-absolute top-0 start-0 w-100 h-100 pe-none z-3';
       const destinationIcon = document.createElement('i');
-      destinationIcon.className = 'page-drop-destination bi bi-arrow-left-circle-fill text-success fs-3 position-absolute top-50 start-0 translate-middle-y ms-2 pe-none d-none';
+      destinationIcon.className = 'page-drop-destination bi bi-arrow-left-circle-fill text-success fs-3 position-absolute top-50 start-0 translate-middle-y ms-2 d-none';
       destinationIcon.setAttribute('aria-hidden', 'true');
-      thumb.append(destinationIcon);
-      const canvas = document.createElement('canvas'); canvas.className = 'position-absolute top-50 start-50 translate-middle mw-100 mh-100 object-fit-contain bg-white shadow-sm'; canvas.draggable = false; canvas.setAttribute('aria-label', `${tr('previewPage', 'Preview page')} ${i + 1}`); thumb.append(canvas);
+      destinationOverlay.append(destinationIcon);
+      const canvas = document.createElement('canvas'); canvas.className = 'position-absolute top-50 start-50 translate-middle mw-100 mh-100 object-fit-contain bg-white shadow-sm'; canvas.draggable = false; canvas.setAttribute('aria-label', `${tr('previewPage', 'Preview page')} ${i + 1}`); thumb.append(canvas, destinationOverlay);
       const actions = document.createElement('div'); actions.className = 'position-absolute top-0 start-0 w-100 h-100 pe-none d-flex flex-column justify-content-between p-2 gap-2';
       const topActions = document.createElement('div'); topActions.className = 'd-flex flex-wrap align-items-start justify-content-between gap-2';
       const bottomActions = document.createElement('div'); bottomActions.className = 'd-flex flex-wrap align-items-end justify-content-between gap-2';
