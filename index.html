@@ -16,16 +16,25 @@
   <nav class="navbar bg-body-tertiary border-bottom shadow-sm py-2" aria-label="PDF Editor navigation">
     <div class="container-fluid d-flex flex-wrap align-items-center gap-2">
       <div class="d-flex align-items-center gap-2">
-        <div class="dropdown">
-          <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Navigate to another app" data-i18n-aria="navigate" title="Navigate to another app"><i class="bi bi-grid"></i></button>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item fs-5 py-2 d-flex align-items-center gap-3" href="/"><i class="bi bi-house fs-4"></i><span><span data-i18n="home">Home</span></span></a></li>
-            <li><a class="dropdown-item fs-5 py-2 d-flex align-items-center gap-3" href="/image-editor"><i class="bi bi-image fs-4"></i><span><span data-i18n="imageEditor">Image Editor</span></span></a></li>
-          </ul>
-        </div>
+        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="offcanvas" data-bs-target="#appNavigation" aria-controls="appNavigation" aria-label="Navigate to another app" data-i18n-aria="navigate" title="Navigate to another app" data-i18n-title="navigate"><i class="bi bi-grid"></i></button>
         <a class="navbar-brand d-flex align-items-center gap-2 mb-0" href="/" aria-label="PDF Editor home"><i class="bi bi-file-earmark-pdf fs-3 text-danger"></i><span class="h3 mb-0">PDF Editor</span></a>
       </div>
-      <div class="d-flex flex-wrap align-items-center gap-2 ms-auto">
+
+    </div>
+  </nav>
+</header>
+<div class="offcanvas offcanvas-start" tabindex="-1" id="appNavigation" aria-labelledby="appNavigationLabel">
+  <div class="offcanvas-header border-bottom">
+    <h2 class="offcanvas-title fs-5" id="appNavigationLabel">PDF Editor</h2>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column p-3">
+    <nav class="nav nav-pills flex-column gap-2" aria-label="Applications">
+      <a class="nav-link d-flex align-items-center gap-3" href="/"><i class="bi bi-house fs-5"></i><span data-i18n="home">Home</span></a>
+      <a class="nav-link d-flex align-items-center gap-3" href="/image-editor"><i class="bi bi-image fs-5"></i><span data-i18n="imageEditor">Image Editor</span></a>
+    </nav>
+  </div>
+  <div class="border-top p-3 d-flex flex-wrap align-items-center gap-2">
         <div class="dropdown">
           <button id="languageButton" type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Choose language"><i class="bi bi-translate me-sm-1"></i><span id="languageLabel" class="d-none d-sm-inline">English</span></button>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageButton">
@@ -42,10 +51,10 @@
             <li><button type="button" class="dropdown-item active" data-theme-choice="auto"><i class="bi bi-circle-half me-2"></i><span data-i18n="auto">Auto</span></button></li>
           </ul>
         </div>
-      </div>
-    </div>
-  </nav>
-</header>
+
+  </div>
+</div>
+
 <main id="pdfEditorApp" class="container-fluid flex-grow-1 d-flex flex-column overflow-hidden">
   <section id="pageListSection" class="d-flex flex-column flex-grow-1 overflow-hidden">
     <div id="pageListToolbar" class="bg-body border-bottom py-3 flex-shrink-0">
