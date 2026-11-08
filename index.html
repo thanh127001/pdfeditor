@@ -12,17 +12,6 @@
 </style>
 </head>
 <body class="d-flex flex-column vh-100 overflow-hidden">
-<header id="pdfEditorTitle" class="bg-body border-bottom flex-shrink-0">
-  <nav class="navbar bg-body-tertiary border-bottom shadow-sm py-2" aria-label="PDF Editor navigation">
-    <div class="container-fluid d-flex flex-wrap align-items-center gap-2">
-      <div class="d-flex align-items-center gap-2">
-        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#appNavigation" aria-expanded="false" aria-controls="appNavigation" aria-label="Navigate to another app" data-i18n-aria="navigate" title="Navigate to another app" data-i18n-title="navigate"><i class="bi bi-grid"></i></button>
-        <a class="navbar-brand d-flex align-items-center gap-2 mb-0" href="/" aria-label="PDF Editor home"><i class="bi bi-file-earmark-pdf fs-3 text-danger"></i><span class="h3 mb-0">PDF Editor</span></a>
-      </div>
-
-    </div>
-  </nav>
-</header>
 <header id="appNavigation" class="collapse bg-body border-bottom shadow-sm flex-shrink-0">
   <nav class="navbar bg-body" aria-label="Main navigation">
     <div class="container-fluid gap-2">
@@ -54,6 +43,17 @@
   </nav>
 </header>
 
+<header id="pdfEditorTitle" class="bg-body border-bottom flex-shrink-0">
+  <nav class="navbar bg-body-tertiary border-bottom shadow-sm py-2" aria-label="PDF Editor navigation">
+    <div class="container-fluid d-flex flex-wrap align-items-center gap-2">
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#appNavigation" aria-expanded="false" aria-controls="appNavigation" aria-label="Navigate to another app" data-i18n-aria="navigate" title="Navigate to another app" data-i18n-title="navigate"><i class="bi bi-grid"></i></button>
+        <a class="navbar-brand d-flex align-items-center gap-2 mb-0" href="/" aria-label="PDF Editor home"><i class="bi bi-file-earmark-pdf fs-3 text-danger"></i><span class="h3 mb-0">PDF Editor</span></a>
+      </div>
+
+    </div>
+  </nav>
+</header>
 <main id="pdfEditorApp" class="container-fluid flex-grow-1 d-flex flex-column overflow-hidden">
   <section id="pageListSection" class="d-flex flex-column flex-grow-1 overflow-hidden">
     <div id="pageListToolbar" class="bg-body border-bottom py-3 flex-shrink-0">
