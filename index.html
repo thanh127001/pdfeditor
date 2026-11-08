@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-bs-theme="auto">
+<html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PDF Editor</title>
@@ -16,26 +16,10 @@
   <nav class="navbar bg-body" aria-label="Main navigation">
     <div class="container-fluid gap-2">
       <ul class="navbar-nav flex-row align-items-center gap-3 me-auto">
-        <li class="nav-item"><a class="nav-link" aria-label="Home" href="/"><i class="bi bi-house me-lg-1" aria-hidden="true"></i><span class="d-none d-lg-inline" data-i18n="home">Home</span></a></li>
-        <li class="nav-item"><a class="nav-link" aria-label="Image Editor" data-i18n-aria="imageEditor" href="/image-editor"><i class="bi bi-image me-lg-1" aria-hidden="true"></i><span class="d-none d-lg-inline" data-i18n="imageEditor">Image Editor</span></a></li>
+        <li class="nav-item"><a class="nav-link" aria-label="Home" href="/"><i class="bi bi-house me-lg-1" aria-hidden="true"></i><span class="d-none d-lg-inline">Home</span></a></li>
+        <li class="nav-item"><a class="nav-link" aria-label="Image Editor" href="/image-editor"><i class="bi bi-image me-lg-1" aria-hidden="true"></i><span class="d-none d-lg-inline">Image Editor</span></a></li>
       </ul>
-      <ul class="navbar-nav flex-row align-items-center gap-3 ms-auto">
-        <li class="nav-item dropdown">
-          <button id="languageButton" type="button" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Choose language"><i class="bi bi-translate me-lg-1" aria-hidden="true"></i><span id="languageLabel" class="d-none d-lg-inline">English</span></button>
-          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageButton">
-            <li><button type="button" class="dropdown-item active" data-language-choice="en" aria-pressed="true">English</button></li>
-            <li><button type="button" class="dropdown-item" data-language-choice="zh-CN" aria-pressed="false">简体中文</button></li>
-            <li><button type="button" class="dropdown-item" data-language-choice="vi" aria-pressed="false">Tiếng Việt</button></li>
-          </ul>
-
-        </li>
-        <li class="nav-item dropdown">
-          <button id="themeButton" type="button" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Choose theme" data-i18n-aria="chooseTheme"><i class="bi bi-circle-half me-lg-1" aria-hidden="true"></i><span class="d-none d-lg-inline" data-i18n="theme">Theme</span></button>
-          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="themeButton">
-            <li><button type="button" class="dropdown-item" data-theme-choice="light"><i class="bi bi-sun me-2"></i><span data-i18n="light">Light</span></button></li>
-            <li><button type="button" class="dropdown-item" data-theme-choice="dark"><i class="bi bi-moon-stars me-2"></i><span data-i18n="dark">Dark</span></button></li>
-            <li><button type="button" class="dropdown-item active" data-theme-choice="auto"><i class="bi bi-circle-half me-2"></i><span data-i18n="auto">Auto</span></button></li>
-          </ul>
+      
 
         </li>
       </ul>
@@ -47,7 +31,7 @@
   <nav class="navbar bg-body-tertiary border-bottom shadow-sm py-2" aria-label="PDF Editor navigation">
     <div class="container-fluid d-flex flex-wrap align-items-center gap-2">
       <div class="d-flex align-items-center gap-2">
-        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#appNavigation" aria-expanded="false" aria-controls="appNavigation" aria-label="Navigate to another app" data-i18n-aria="navigate" title="Navigate to another app" data-i18n-title="navigate"><i class="bi bi-grid"></i></button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#appNavigation" aria-expanded="false" aria-controls="appNavigation" aria-label="Navigate to another app" title="Navigate to another app"><i class="bi bi-grid"></i></button>
         <a class="navbar-brand d-flex align-items-center gap-2 mb-0" href="/" aria-label="PDF Editor home"><i class="bi bi-file-earmark-pdf fs-3 text-danger"></i><span class="h3 mb-0">PDF Editor</span></a>
       </div>
 
@@ -59,10 +43,10 @@
     <div id="pageListToolbar" class="bg-body border-bottom py-3 flex-shrink-0">
       <div class="row g-2 align-items-center">
         <div class="col-12 col-lg"><div class="d-flex flex-wrap gap-2">
-          <button id="addPdf" type="button" class="btn btn-primary"><i class="bi bi-file-earmark-plus me-1"></i><span data-i18n="addPdf">Add PDF</span></button>
-          <button id="addBlank" type="button" class="btn btn-primary"><i class="bi bi-file-earmark me-1"></i><span data-i18n="blankPage">Blank Page</span></button>
-          <button id="exportPdf" type="button" class="btn btn-success" disabled><i class="bi bi-download me-1"></i><span data-i18n="exportPdf">Export PDF</span></button>
-          <button id="clearAll" type="button" class="btn btn-danger" disabled><i class="bi bi-trash3 me-1"></i><span data-i18n="clearAll">Clear All</span></button>
+          <button id="addPdf" type="button" class="btn btn-primary"><i class="bi bi-file-earmark-plus me-1"></i><span>Add PDF</span></button>
+          <button id="addBlank" type="button" class="btn btn-primary"><i class="bi bi-file-earmark me-1"></i><span>Blank Page</span></button>
+          <button id="exportPdf" type="button" class="btn btn-success" disabled><i class="bi bi-download me-1"></i><span>Export PDF</span></button>
+          <button id="clearAll" type="button" class="btn btn-danger" disabled><i class="bi bi-trash3 me-1"></i><span>Clear All</span></button>
         </div></div>
 
         <div class="col-12 col-lg-auto"><div class="d-flex justify-content-lg-end"><div class="dropdown">
@@ -74,21 +58,21 @@
       <div class="row g-2 align-items-center mt-1">
         <div class="col-12 col-lg"><div class="d-flex flex-wrap gap-2">
           <button id="clearSelection" type="button" class="btn btn-outline-secondary" disabled><i class="bi bi-x-circle me-1"></i>Clear Selection (0)</button>
-          <button id="deleteSelected" type="button" class="btn btn-outline-danger" disabled><i class="bi bi-trash me-1"></i><span data-i18n="delete">Delete</span></button>
-          <button id="rotateSelected" type="button" class="btn btn-outline-secondary" disabled><i class="bi bi-arrow-clockwise me-1"></i><span data-i18n="rotate">Rotate 90°</span></button>
-          <button id="moveUp" type="button" class="btn btn-outline-secondary" disabled><i class="bi bi-arrow-up me-1"></i><span data-i18n="moveUp">Move Up</span></button>
-          <button id="moveDown" type="button" class="btn btn-outline-secondary" disabled><i class="bi bi-arrow-down me-1"></i><span data-i18n="moveDown">Move Down</span></button>
+          <button id="deleteSelected" type="button" class="btn btn-outline-danger" disabled><i class="bi bi-trash me-1"></i><span>Delete</span></button>
+          <button id="rotateSelected" type="button" class="btn btn-outline-secondary" disabled><i class="bi bi-arrow-clockwise me-1"></i><span>Rotate 90°</span></button>
+          <button id="moveUp" type="button" class="btn btn-outline-secondary" disabled><i class="bi bi-arrow-up me-1"></i><span>Move Up</span></button>
+          <button id="moveDown" type="button" class="btn btn-outline-secondary" disabled><i class="bi bi-arrow-down me-1"></i><span>Move Down</span></button>
         </div></div>
 
         <div class="col-12 col-lg-auto"><div class="d-flex flex-wrap justify-content-lg-end gap-2">
-          <button id="undoBtn" type="button" class="btn btn-outline-secondary" disabled><i class="bi bi-arrow-counterclockwise me-1"></i><span data-i18n="undo">Undo</span></button>
+          <button id="undoBtn" type="button" class="btn btn-outline-secondary" disabled><i class="bi bi-arrow-counterclockwise me-1"></i><span>Undo</span></button>
         </div></div>
       </div>
     </div>
     <div id="pageListScrollArea" class="py-3 flex-grow-1 overflow-y-auto overflow-x-hidden">
     <div>
-    <div id="emptyState" class="rounded p-5 text-center text-secondary border border-2 border-secondary-subtle"><span data-i18n="emptyState">No pages yet. Add a PDF or create a blank page.</span></div>
-    <div id="pages" class="row row-cols-2 row-cols-sm-3 row-cols-lg-6 g-3" aria-label="PDF pages" data-i18n-aria="pdfPages"></div>
+    <div id="emptyState" class="rounded p-5 text-center text-secondary border border-2 border-secondary-subtle"><span>No pages yet. Add a PDF or create a blank page.</span></div>
+    <div id="pages" class="row row-cols-2 row-cols-sm-3 row-cols-lg-6 g-3" aria-label="PDF pages"></div>
     </div>
     </div>
   </section>
@@ -96,13 +80,13 @@
     <div id="pageDetailsToolbar" class="bg-body border-bottom py-3 flex-shrink-0">
       <div class="row g-2 align-items-center">
         <div class="col-12 col-lg"><div class="d-flex flex-wrap gap-2 align-items-center">
-          <button id="back" type="button" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i><span data-i18n="back">Back to Pages</span></button>
+          <button id="back" type="button" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i><span>Back to Pages</span></button>
         </div></div>
 
         <div class="col-12 col-lg-auto"><div class="d-flex flex-wrap justify-content-lg-end gap-2 align-items-center">
           <span id="pagePosition" class="small text-secondary" aria-live="polite">Page 1 / 1</span>
-          <button id="previous" type="button" class="btn btn-primary" aria-label="Previous page" data-i18n-aria="previous"><i class="bi bi-chevron-left"></i></button>
-          <button id="next" type="button" class="btn btn-primary" aria-label="Next page" data-i18n-aria="next"><i class="bi bi-chevron-right"></i></button>
+          <button id="previous" type="button" class="btn btn-primary" aria-label="Previous page"><i class="bi bi-chevron-left"></i></button>
+          <button id="next" type="button" class="btn btn-primary" aria-label="Next page"><i class="bi bi-chevron-right"></i></button>
           <div class="dropdown">
             <button id="detailsZoomButton" type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Zoom: 100%</button>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="detailsZoomButton" class="overflow-auto">
@@ -123,19 +107,19 @@
       </div>
       <div id="pageDetailsDrawingTools" class="row g-2 align-items-center mt-1">
         <div class="col-12 col-lg"><div class="d-flex flex-wrap gap-2">
-          <button id="toolHold" type="button" class="btn btn-primary" aria-pressed="true" title="Hold and drag to move the page" data-i18n-title="holdHint"><i class="bi bi-hand-index-thumb me-1"></i><span data-i18n="hold">Hold</span></button>
-          <button id="toolSelectText" type="button" class="btn btn-outline-primary" data-demo-tool="SelectText" title="Select and copy recognized PDF text" data-i18n-title="selectTextHint"><i class="bi bi-cursor-text me-1"></i><span data-i18n="selectText">Select Text</span></button>
-          <button id="toolPageSize" type="button" class="btn btn-outline-primary" data-demo-tool="PageSize"><i class="bi bi-aspect-ratio me-1"></i><span data-i18n="pageSize">Page Size</span></button>
-          <button id="toolHighlight" type="button" class="btn btn-outline-primary" data-demo-tool="Highlight"><i class="bi bi-highlighter me-1"></i><span data-i18n="highlight">Highlight</span></button>
-          <button id="toolAddText" type="button" class="btn btn-outline-primary" data-demo-tool="Text"><i class="bi bi-fonts me-1"></i><span data-i18n="text">Text</span></button>
-          <button id="toolImage" type="button" class="btn btn-outline-primary" data-demo-tool="Image"><i class="bi bi-image me-1"></i><span data-i18n="image">Image</span></button>
-          <button id="toolRectangle" type="button" class="btn btn-outline-primary" data-demo-tool="Rectangle"><i class="bi bi-square me-1"></i><span data-i18n="rectangle">Rectangle</span></button>
-          <button id="toolEllipse" type="button" class="btn btn-outline-primary" data-demo-tool="Ellipse"><i class="bi bi-circle me-1"></i><span data-i18n="ellipse">Ellipse</span></button>
-          <button id="toolDrawLine" type="button" class="btn btn-outline-primary" data-demo-tool="Line"><i class="bi bi-slash-lg me-1"></i><span data-i18n="line">Line</span></button>
-          <button id="toolDraw" type="button" class="btn btn-outline-primary" data-demo-tool="Draw"><i class="bi bi-pencil me-1"></i><span data-i18n="draw">Draw</span></button>
+          <button id="toolHold" type="button" class="btn btn-primary" aria-pressed="true" title="Hold and drag to move the page"><i class="bi bi-hand-index-thumb me-1"></i><span>Hold</span></button>
+          <button id="toolSelectText" type="button" class="btn btn-outline-primary" data-demo-tool="SelectText" title="Select and copy recognized PDF text"><i class="bi bi-cursor-text me-1"></i><span>Select Text</span></button>
+          <button id="toolPageSize" type="button" class="btn btn-outline-primary" data-demo-tool="PageSize"><i class="bi bi-aspect-ratio me-1"></i><span>Page Size</span></button>
+          <button id="toolHighlight" type="button" class="btn btn-outline-primary" data-demo-tool="Highlight"><i class="bi bi-highlighter me-1"></i><span>Highlight</span></button>
+          <button id="toolAddText" type="button" class="btn btn-outline-primary" data-demo-tool="Text"><i class="bi bi-fonts me-1"></i><span>Text</span></button>
+          <button id="toolImage" type="button" class="btn btn-outline-primary" data-demo-tool="Image"><i class="bi bi-image me-1"></i><span>Image</span></button>
+          <button id="toolRectangle" type="button" class="btn btn-outline-primary" data-demo-tool="Rectangle"><i class="bi bi-square me-1"></i><span>Rectangle</span></button>
+          <button id="toolEllipse" type="button" class="btn btn-outline-primary" data-demo-tool="Ellipse"><i class="bi bi-circle me-1"></i><span>Ellipse</span></button>
+          <button id="toolDrawLine" type="button" class="btn btn-outline-primary" data-demo-tool="Line"><i class="bi bi-slash-lg me-1"></i><span>Line</span></button>
+          <button id="toolDraw" type="button" class="btn btn-outline-primary" data-demo-tool="Draw"><i class="bi bi-pencil me-1"></i><span>Draw</span></button>
         </div></div>
         <div class="col-12 col-lg-auto"><div class="d-flex flex-wrap justify-content-lg-end gap-2">
-          <button id="undoBtnDetails" type="button" class="btn btn-outline-secondary" disabled><i class="bi bi-arrow-counterclockwise me-1"></i><span data-i18n="undo">Undo</span></button>
+          <button id="undoBtnDetails" type="button" class="btn btn-outline-secondary" disabled><i class="bi bi-arrow-counterclockwise me-1"></i><span>Undo</span></button>
         </div></div>
       </div>
       <div id="pageDetailsToolOptions" class="row g-2 align-items-center mt-1 d-none" aria-live="polite">
@@ -151,57 +135,25 @@
 <input id="fileInput" type="file" accept=".pdf,application/pdf" multiple hidden>
 <div id="editorStatus" class="visually-hidden" role="status" aria-live="polite"></div>
 <div id="clearAllModal" class="modal fade" tabindex="-1" aria-labelledby="clearAllModalLabel"><div class="modal-dialog"><div class="modal-content">
-  <div class="modal-header"><h2 id="clearAllModalLabel" class="modal-title fs-5"><span data-i18n="clearAllTitle">Clear All Pages?</span></h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
-  <div class="modal-body"><span data-i18n="clearAllMessage">Are you sure you want to remove all pages? This action cannot be undone. Undo history will also be deleted.</span></div>
-  <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><span data-i18n="cancel">Cancel</span></button><button id="confirmClearAll" type="button" class="btn btn-danger"><span data-i18n="clearAll">Clear All</span></button></div>
+  <div class="modal-header"><h2 id="clearAllModalLabel" class="modal-title fs-5"><span>Clear All Pages?</span></h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+  <div class="modal-body"><span>Are you sure you want to remove all pages? This action cannot be undone. Undo history will also be deleted.</span></div>
+  <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><span>Cancel</span></button><button id="confirmClearAll" type="button" class="btn btn-danger"><span>Clear All</span></button></div>
 </div></div></div>
 <div id="exportScopeModal" class="modal fade" tabindex="-1" aria-labelledby="exportScopeModalLabel"><div class="modal-dialog"><div class="modal-content">
-  <div class="modal-header"><h2 id="exportScopeModalLabel" class="modal-title fs-5"><span data-i18n="exportPdf">Export PDF</span></h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+  <div class="modal-header"><h2 id="exportScopeModalLabel" class="modal-title fs-5"><span>Export PDF</span></h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
   <div class="modal-body">
-    <div class="mb-3"><label for="exportFileName" class="form-label" data-i18n="fileName">File Name</label><input id="exportFileName" class="form-control" type="text" placeholder="File Name" data-i18n-placeholder="fileName" aria-label="File Name" data-i18n-aria="fileName" value="Untitled Document" maxlength="200"></div>
-    <div id="exportScopeOptions"><p><span data-i18n="exportPrompt">Choose which pages to export.</span></p>
-    <div class="form-check mb-3"><input id="exportAll" class="form-check-input" type="radio" name="exportScope" value="all" checked><label class="form-check-label" for="exportAll"><strong><span data-i18n="allPages">All Pages</span></strong><br><small id="allPageCount" class="text-secondary"></small></label></div>
-    <div class="form-check"><input id="exportSelected" class="form-check-input" type="radio" name="exportScope" value="selected"><label class="form-check-label" for="exportSelected"><strong><span data-i18n="selectedPages">Selected Pages</span></strong><br><small id="selectedPageCount" class="text-secondary"></small></label></div>
+    <div class="mb-3"><label for="exportFileName" class="form-label">File Name</label><input id="exportFileName" class="form-control" type="text" placeholder="File Name" aria-label="File Name" value="Untitled Document" maxlength="200"></div>
+    <div id="exportScopeOptions"><p><span>Choose which pages to export.</span></p>
+    <div class="form-check mb-3"><input id="exportAll" class="form-check-input" type="radio" name="exportScope" value="all" checked><label class="form-check-label" for="exportAll"><strong><span>All Pages</span></strong><br><small id="allPageCount" class="text-secondary"></small></label></div>
+    <div class="form-check"><input id="exportSelected" class="form-check-input" type="radio" name="exportScope" value="selected"><label class="form-check-label" for="exportSelected"><strong><span>Selected Pages</span></strong><br><small id="selectedPageCount" class="text-secondary"></small></label></div>
     </div>
   </div>
-  <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><span data-i18n="cancel">Cancel</span></button><button id="confirmExport" type="button" class="btn btn-success"><i class="bi bi-download me-1"></i><span data-i18n="exportPdf">Export PDF</span></button></div>
+  <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><span>Cancel</span></button><button id="confirmExport" type="button" class="btn btn-success"><i class="bi bi-download me-1"></i><span>Export PDF</span></button></div>
 </div></div></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script>
-(() => {
-  const root = document.documentElement;
-  const choices = [...document.querySelectorAll('[data-theme-choice]')];
-  const media = window.matchMedia('(prefers-color-scheme: dark)');
-  const valid = ['light', 'dark', 'auto'];
-  let choice = 'auto';
-  try {
-    const stored = localStorage.getItem('pdfEditorTheme');
-    if (valid.includes(stored)) choice = stored;
-  } catch (_) {}
-  function applyTheme() {
-    root.setAttribute('data-bs-theme', choice === 'auto' ? (media.matches ? 'dark' : 'light') : choice);
-    const icon = document.querySelector('#themeButton > i');
-    if (icon) icon.className = 'bi ' + (choice === 'light' ? 'bi-sun' : choice === 'dark' ? 'bi-moon-stars' : 'bi-circle-half') + ' me-1';
-    choices.forEach(button => {
-      const selected = button.dataset.themeChoice === choice;
-      button.classList.toggle('active', selected);
-      button.setAttribute('aria-pressed', String(selected));
-    });
-  }
-  choices.forEach(button => button.addEventListener('click', () => {
-    choice = button.dataset.themeChoice;
-    try { localStorage.setItem('pdfEditorTheme', choice); } catch (_) {}
-    applyTheme();
-  }));
-  if (media.addEventListener) media.addEventListener('change', applyTheme);
-  else if (media.addListener) media.addListener(applyTheme);
-  applyTheme();
-})();
-</script>
-
 <script type="module" src="./pdfeditor/index.js"></script>
 </body>
 </html>
