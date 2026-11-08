@@ -24,31 +24,36 @@
   </nav>
 </header>
 <div class="offcanvas offcanvas-top" tabindex="-1" id="appNavigation" aria-label="Application navigation">
-  <div class="offcanvas-body d-flex flex-wrap align-items-center gap-2 p-3">
-    <nav class="nav nav-pills flex-row flex-wrap gap-2" aria-label="Applications">
-      <a class="nav-link d-flex align-items-center gap-2" href="/"><i class="bi bi-house"></i><span data-i18n="home">Home</span></a>
-      <a class="nav-link d-flex align-items-center gap-2 active" href="/pdf-editor" aria-current="page"><i class="bi bi-file-earmark-pdf"></i><span>PDF Editor</span></a>
-      <a class="nav-link d-flex align-items-center gap-2" href="/image-editor"><i class="bi bi-image"></i><span data-i18n="imageEditor">Image Editor</span></a>
-    </nav>
-    <div class="d-flex flex-wrap align-items-center gap-2 ms-auto">
-        <div class="dropdown">
-          <button id="languageButton" type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Choose language"><i class="bi bi-translate me-sm-1"></i><span id="languageLabel" class="d-none d-sm-inline">English</span></button>
+  <div class="offcanvas-body p-0">
+    <nav class="navbar bg-body" aria-label="Main navigation">
+      <div class="container-fluid gap-2">
+        <ul class="navbar-nav flex-row align-items-center gap-3 me-auto">
+          <li class="nav-item"><a class="nav-link" aria-label="Home" href="/"><i class="bi bi-house me-lg-1" aria-hidden="true"></i><span class="d-none d-lg-inline" data-i18n="home">Home</span></a></li>
+          <li class="nav-item"><a class="nav-link active" aria-current="page" aria-label="PDF Editor" href="/pdf-editor"><i class="bi bi-file-earmark-pdf me-lg-1" aria-hidden="true"></i><span class="d-none d-lg-inline">PDF Editor</span></a></li>
+          <li class="nav-item"><a class="nav-link" aria-label="Image Editor" data-i18n-aria="imageEditor" href="/image-editor"><i class="bi bi-image me-lg-1" aria-hidden="true"></i><span class="d-none d-lg-inline" data-i18n="imageEditor">Image Editor</span></a></li>
+        </ul>
+        <ul class="navbar-nav flex-row align-items-center gap-3 ms-auto">
+          <li class="nav-item dropdown">
+            <button id="languageButton" type="button" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Choose language"><i class="bi bi-translate me-lg-1" aria-hidden="true"></i><span id="languageLabel" class="d-none d-lg-inline">English</span></button>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageButton">
             <li><button type="button" class="dropdown-item active" data-language-choice="en" aria-pressed="true">English</button></li>
             <li><button type="button" class="dropdown-item" data-language-choice="zh-CN" aria-pressed="false">简体中文</button></li>
             <li><button type="button" class="dropdown-item" data-language-choice="vi" aria-pressed="false">Tiếng Việt</button></li>
           </ul>
-        </div>
-        <div class="dropdown">
-          <button id="themeButton" type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Choose theme" data-i18n-aria="chooseTheme"><i class="bi bi-circle-half me-sm-1"></i><span class="d-none d-sm-inline" data-i18n="theme">Theme</span></button>
+
+          </li>
+          <li class="nav-item dropdown">
+            <button id="themeButton" type="button" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Choose theme" data-i18n-aria="chooseTheme"><i class="bi bi-circle-half me-lg-1" aria-hidden="true"></i><span class="d-none d-lg-inline" data-i18n="theme">Theme</span></button>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="themeButton">
             <li><button type="button" class="dropdown-item" data-theme-choice="light"><i class="bi bi-sun me-2"></i><span data-i18n="light">Light</span></button></li>
             <li><button type="button" class="dropdown-item" data-theme-choice="dark"><i class="bi bi-moon-stars me-2"></i><span data-i18n="dark">Dark</span></button></li>
             <li><button type="button" class="dropdown-item active" data-theme-choice="auto"><i class="bi bi-circle-half me-2"></i><span data-i18n="auto">Auto</span></button></li>
           </ul>
-        </div>
 
-    </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
   </div>
 </div>
 
