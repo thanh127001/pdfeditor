@@ -23,18 +23,17 @@
     </div>
   </nav>
 </header>
-<div class="offcanvas offcanvas-start" tabindex="-1" id="appNavigation" aria-labelledby="appNavigationLabel">
+<div class="offcanvas offcanvas-top" tabindex="-1" id="appNavigation" aria-labelledby="appNavigationLabel">
   <div class="offcanvas-header border-bottom">
     <h2 class="offcanvas-title fs-5" id="appNavigationLabel">PDF Editor</h2>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
-  <div class="offcanvas-body d-flex flex-column p-3">
-    <nav class="nav nav-pills flex-column gap-2" aria-label="Applications">
-      <a class="nav-link d-flex align-items-center gap-3" href="/"><i class="bi bi-house fs-5"></i><span data-i18n="home">Home</span></a>
-      <a class="nav-link d-flex align-items-center gap-3" href="/image-editor"><i class="bi bi-image fs-5"></i><span data-i18n="imageEditor">Image Editor</span></a>
+  <div class="offcanvas-body d-flex flex-wrap align-items-center gap-2 p-3">
+    <nav class="nav nav-pills flex-row flex-wrap gap-2" aria-label="Applications">
+      <a class="nav-link d-flex align-items-center gap-2" href="/"><i class="bi bi-house"></i><span data-i18n="home">Home</span></a>
+      <a class="nav-link d-flex align-items-center gap-2" href="/image-editor"><i class="bi bi-image"></i><span data-i18n="imageEditor">Image Editor</span></a>
     </nav>
-  </div>
-  <div class="border-top p-3 d-flex flex-wrap align-items-center gap-2">
+    <div class="d-flex flex-wrap align-items-center gap-2 ms-auto">
         <div class="dropdown">
           <button id="languageButton" type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Choose language"><i class="bi bi-translate me-sm-1"></i><span id="languageLabel" class="d-none d-sm-inline">English</span></button>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageButton">
@@ -52,6 +51,7 @@
           </ul>
         </div>
 
+    </div>
   </div>
 </div>
 
