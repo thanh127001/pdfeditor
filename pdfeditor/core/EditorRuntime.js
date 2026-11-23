@@ -230,19 +230,18 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     }
     updateButtons();
   }
-  // Keep the existing insertion-gap calculation without drawing a destination marker.
+  // Show the destination arrow on the target page or the final virtual page.
   function clearDropDestinationIcon() {
     $('pages').querySelectorAll('.page-drop-destination').forEach(icon => icon.classList.add('d-none'));
   }
   function showDropGap(index) {
-    // Preserve the original insertion index; only the visual feedback changes.
     dropIndex = index;
     clearDropDestinationIcon();
     const target = $('pages').children[index];
     target?.querySelector('.page-drop-destination')?.classList.remove('d-none');
   }
   function findGap(x,y) {
-    const cols = [...$('pages').children];
+    const cols = [...$('pages').children].filter(col => col.dataset.pageId);
     if (!cols.length) return;
     // A pointer over a page always inserts BEFORE that page.
     // Any blank space (including grid gutters and outside the list) appends.
@@ -429,6 +428,29 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         if (version !== renderVersion || !canvas.isConnected) return;
         thumb.textContent = 'Preview unavailable'; thumb.classList.add('small','text-danger'); console.error(error);
       });
+    }
+    // A permanent visual drop target after the last real page. It is not part
+    // of the pages array, selection, export, numbering, or undo history.
+    if (pages.length) {
+      const virtualCol = document.createElement('div');
+      virtualCol.className = 'col';
+      virtualCol.id = 'pageDropEnd';
+      virtualCol.setAttribute('aria-label', 'Drop here to move pages to the end');
+      const virtualCard = document.createElement('div');
+      virtualCard.className = 'card h-100 position-relative border border-2 border-dashed border-secondary-subtle bg-body-tertiary';
+      const virtualThumb = document.createElement('div');
+      virtualThumb.className = 'ratio';
+      virtualThumb.style.setProperty('--bs-aspect-ratio', '141.4%');
+      const virtualOverlay = document.createElement('div');
+      virtualOverlay.className = 'position-absolute top-0 start-0 w-100 h-100 pe-none';
+      const virtualIcon = document.createElement('i');
+      virtualIcon.className = 'page-drop-destination bi bi-arrow-left-circle-fill text-success fs-3 position-absolute top-50 start-0 translate-middle-y ms-2 d-none';
+      virtualIcon.setAttribute('aria-hidden', 'true');
+      virtualOverlay.append(virtualIcon);
+      virtualThumb.append(virtualOverlay);
+      virtualCard.append(virtualThumb);
+      virtualCol.append(virtualCard);
+      grid.append(virtualCol);
     }
     updateButtons();
     // Restore after the new thumbnails have established their layout.
