@@ -12,28 +12,31 @@
 </style>
 </head>
 <body class="d-flex flex-column vh-100 overflow-hidden">
-<header id="appNavigation" class="collapse bg-body border-bottom shadow-sm flex-shrink-0">
-  <nav class="navbar bg-body" aria-label="Main navigation">
-    <div class="container gap-2">
-      <ul class="navbar-nav flex-row align-items-center gap-3 me-auto">
-        <li class="nav-item"><a class="nav-link" aria-label="Home" href="/"><i class="bi bi-house me-lg-1" aria-hidden="true"></i><span class="d-none d-lg-inline">Home</span></a></li>
-        <li class="nav-item"><a class="nav-link" aria-label="Image Editor" href="/image-editor"><i class="bi bi-image me-lg-1" aria-hidden="true"></i><span class="d-none d-lg-inline">Image Editor</span></a></li>
-      </ul>
-    </div>
-  </nav>
-</header>
-
 <header id="pdfEditorTitle" class="bg-body border-bottom flex-shrink-0">
   <nav class="navbar bg-body-tertiary border-bottom shadow-sm py-2" aria-label="PDF Editor navigation">
     <div class="container d-flex flex-wrap align-items-center gap-2">
       <div class="d-flex align-items-center gap-2">
-        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#appNavigation" aria-expanded="false" aria-controls="appNavigation" aria-label="Navigate to another app" title="Navigate to another app"><i class="bi bi-grid"></i></button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="offcanvas" data-bs-target="#appNavigation" aria-controls="appNavigation" aria-label="Navigate to another app" title="Navigate to another app"><i class="bi bi-grid"></i></button>
         <a class="navbar-brand d-flex align-items-center gap-2 mb-0" href="/" aria-label="PDF Editor home"><i class="bi bi-file-earmark-pdf fs-3 text-danger"></i><span class="h3 mb-0">PDF Editor</span></a>
       </div>
 
     </div>
   </nav>
 </header>
+<div id="appNavigation" class="offcanvas offcanvas-start" tabindex="-1" aria-labelledby="appNavigationLabel">
+  <div class="offcanvas-header">
+    <h2 id="appNavigationLabel" class="offcanvas-title fs-5">Navigation</h2>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    <nav aria-label="Main navigation">
+      <ul class="navbar-nav gap-2">
+        <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house me-2" aria-hidden="true"></i>Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="/image-editor"><i class="bi bi-image me-2" aria-hidden="true"></i>Image Editor</a></li>
+      </ul>
+    </nav>
+  </div>
+</div>
 <main id="pdfEditorApp" class="container flex-grow-1 d-flex flex-column overflow-hidden">
   <section id="pageListSection" class="d-flex flex-column flex-grow-1 overflow-hidden">
     <div id="pageListToolbar" class="bg-body border-bottom py-3 flex-shrink-0">
