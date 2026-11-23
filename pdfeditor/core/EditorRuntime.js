@@ -437,7 +437,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       virtualCol.id = 'pageDropEnd';
       virtualCol.setAttribute('aria-label', 'Drop here to move pages to the end');
       const virtualCard = document.createElement('div');
-      virtualCard.className = 'card h-100 position-relative border border-2 border-dashed border-secondary-subtle bg-body-tertiary';
+      virtualCard.className = 'h-100 position-relative bg-body';
       const virtualThumb = document.createElement('div');
       virtualThumb.className = 'ratio';
       virtualThumb.style.setProperty('--bs-aspect-ratio', '141.4%');
