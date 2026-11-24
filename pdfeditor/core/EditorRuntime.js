@@ -52,6 +52,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     $('addPdf').disabled = $('addBlank').disabled = busy;
     $('clearSelection').disabled = busy || !s;
     $('deleteSelected').disabled = $('rotateSelected').disabled = busy || !s;
+    $('rotateDetails').disabled = busy || indexOf(detailsId) < 0;
     $('moveUp').disabled = busy || one <= 0;
     $('moveDown').disabled = busy || one < 0 || one >= n - 1;
     $('clearSelection').innerHTML = `<i class="bi bi-x-circle me-1"></i>${tr('clearSelection', 'Clear Selection')} (${s})`;
@@ -63,7 +64,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     if(details) thisEditor.pageManager.open(detailsId); else thisEditor.pageManager.back();
     $('pageListSection').classList.toggle('d-none', details);
     $('pageDetailsSection').classList.toggle('d-none', !details);
-    if (details) renderDetails(); else { detailsRenderToken++; ++ocrRequest; ocrLayer.classList.add('d-none'); }
+    if (details) renderDetails(); else { detailsRenderToken++; }
     updateButtons();
   }
   function renderDetails() {
@@ -79,71 +80,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     if (activeDetailsTool === "Text") renderTextOptions();
     if (activeDetailsTool === "Image") renderImageOptions();
     if (["Line","Draw","Rectangle","Ellipse"].includes(activeDetailsTool)) renderShapeOptions();
-  }
-  // OCR is read-only: cache recognized word positions by page appearance.
-  // Coordinates are percentages so text remains aligned at any zoom level.
-  const ocrCache = new Map();
-  let ocrWorkerPromise = null, ocrRequest = 0;
-  const ocrLayer = $('ocrTextLayer');
-  const ocrKey = page => [page.id, page.rotation || 0, page.pageSize || 'original'].join(':');
-  function renderOcrWords(words) {
-    ocrLayer.replaceChildren();
-    for (const word of words) {
-      if (!word.text?.trim()) continue;
-      const span = document.createElement('span');
-      span.textContent = word.text + ' ';
-      span.className = 'position-absolute';
-      Object.assign(span.style, {
-        left: word.x + '%', top: word.y + '%',
-        width: word.w + '%', height: word.h + '%',
-        color: 'transparent', cursor: 'text', userSelect: 'text',
-        whiteSpace: 'pre', overflow: 'visible', lineHeight: '1',
-        fontSize: '12px'
-      });
-      ocrLayer.append(span);
-    }
-  }
-  function syncOcrLayer() {
-    const enabled = activeDetailsTool === 'SelectText' && isDetails();
-    ocrLayer.classList.toggle('d-none', !enabled);
-    ocrLayer.style.pointerEvents = enabled ? 'auto' : 'none';
-    if (enabled) void recognizeCurrentPage();
-    else { ++ocrRequest; window.getSelection()?.removeAllRanges(); }
-  }
-  async function recognizeCurrentPage() {
-    if (activeDetailsTool !== 'SelectText' || !isDetails()) return;
-    const page = currentPage(), canvas = $('detailsCanvas');
-    if (!page || !canvas.width || !canvas.height) return;
-    const request = ++ocrRequest, key = ocrKey(page);
-    const cached = ocrCache.get(key);
-    if (cached) { renderOcrWords(cached); return; }
-    ocrLayer.replaceChildren();
-    status('Recognizing text on this page...');
-    try {
-      if (!window.Tesseract) throw new Error('Tesseract.js could not be loaded.');
-      if (!ocrWorkerPromise) ocrWorkerPromise = window.Tesseract.createWorker('eng').catch(error => {
-        ocrWorkerPromise = null; throw error;
-      });
-      const worker = await ocrWorkerPromise;
-      if (request !== ocrRequest || activeDetailsTool !== 'SelectText') return;
-      const result = await worker.recognize(canvas, {}, {text: true, blocks: true});
-      const data = result.data;
-      const words = (data.words || data.blocks?.flatMap(b => b.paragraphs?.flatMap(p => p.lines?.flatMap(l => l.words || []) || []) || []) || [])
-        .filter(w => w.bbox && w.text?.trim())
-        .map(w => ({
-          text: w.text,
-          x: 100 * w.bbox.x0 / canvas.width,
-          y: 100 * w.bbox.y0 / canvas.height,
-          w: 100 * (w.bbox.x1 - w.bbox.x0) / canvas.width,
-          h: 100 * (w.bbox.y1 - w.bbox.y0) / canvas.height
-        }));
-      ocrCache.set(key, words);
-      if (request !== ocrRequest || activeDetailsTool !== 'SelectText' || ocrKey(currentPage()) !== key) return;
-      renderOcrWords(words);
-      status(words.length ? 'Text ready. Drag to select and press Ctrl+C to copy.' : 'No recognizable text found on this page.');
-    } catch (error) {
-      if (request === ocrRequest) status('Text recognition failed: ' + error.message);
-    }
   }
   async function renderDetailsPage() {
     const token = ++detailsRenderToken;
@@ -175,7 +111,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       renderTexts();
       renderImages();
       renderShapes();
-      if (activeDetailsTool === 'SelectText') { ocrLayer.replaceChildren(); void recognizeCurrentPage(); }
       if(activeDetailsTool === "Image")renderImageOptions();
     } catch (error) { if (token === detailsRenderToken) status(`Unable to display page: ${error.message}`); }
   }
@@ -505,10 +440,15 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     if (isDetails()) renderDetails();
   }
   $('deleteSelected').addEventListener('click', () => deletePagesById(new Set(selected)));
-  $('rotateSelected').addEventListener('click', () => {
-    if (!selected.size || busy) return;
-    pages.forEach(p => { if (selected.has(p.id)) { recordPageEdit(p); p.rotation = (p.rotation + 90) % 360; } });
+  function rotatePages(ids) {
+    if (!ids.size || busy) return;
+    pages.forEach(p => { if (ids.has(p.id)) { recordPageEdit(p); p.rotation = (p.rotation + 90) % 360; } });
     renderList();
+    if (isDetails()) renderDetails();
+  }
+  $('rotateSelected').addEventListener('click', () => rotatePages(selected));
+  $('rotateDetails').addEventListener('click', () => {
+    if (indexOf(detailsId) >= 0) rotatePages(new Set([detailsId]));
   });
   function move(delta) {
     if (selected.size !== 1 || busy) return;
@@ -812,7 +752,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   }));
   function updateDetailsToolSelection() {
     // Page Size is a page command, not a registered drawing tool.
-    const drawingTool = ['PageSize', 'SelectText'].includes(activeDetailsTool) ? null : activeDetailsTool;
+    const drawingTool = activeDetailsTool === 'PageSize' ? null : activeDetailsTool;
     if(thisEditor.state.activeTool!==drawingTool) thisEditor.toolManager.activate(drawingTool);
     document.querySelectorAll('[data-demo-tool]').forEach(button => {
       const active = button.dataset.demoTool === activeDetailsTool;
@@ -826,7 +766,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     $('toolHold').setAttribute('aria-pressed', String(holding));
     $('editorPage').style.cursor = holding ? 'grab' : '';
     $('editorPage').style.touchAction = holding ? 'none' : '';
-    syncOcrLayer();
     const row = $('pageDetailsToolOptions');
     // The entire options row controls visibility; its Delete button only changes disabled state.
     row.classList.toggle('d-none', !activeDetailsTool);
