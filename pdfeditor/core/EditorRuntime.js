@@ -209,7 +209,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   // Update only selection styling and selection buttons. Keep thumbnails and scroll intact.
   function updateSelectionUI() {
     const grid = $('pages');
-    for (const col of grid.children) {
+    for (const col of grid.querySelectorAll(':scope > [data-page-id]')) {
       const id = Number(col.dataset.pageId);
       const isSelected = selected.has(id);
       const card = col.querySelector('.page-card');
@@ -230,7 +230,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     }
     updateButtons();
   }
-  // Keep the existing insertion-gap calculation without drawing a destination marker.
+  // Show the insertion arrow on a real page or the virtual end slot.
   function clearDropDestinationIcon() {
     $('pages').querySelectorAll('.page-drop-destination').forEach(icon => icon.classList.add('d-none'));
   }
@@ -238,11 +238,13 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     // Preserve the original insertion index; only the visual feedback changes.
     dropIndex = index;
     clearDropDestinationIcon();
-    const target = $('pages').children[index];
+    const target = index === pages.length
+      ? $('pageDropEnd')
+      : $('pages').querySelectorAll(':scope > [data-page-id]')[index];
     target?.querySelector('.page-drop-destination')?.classList.remove('d-none');
   }
   function findGap(x,y) {
-    const cols = [...$('pages').children];
+    const cols = [...$('pages').querySelectorAll(':scope > [data-page-id]')];
     if (!cols.length) return;
     // A pointer over a page always inserts BEFORE that page.
     // Any blank space (including grid gutters and outside the list) appends.
@@ -430,6 +432,24 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         thumb.textContent = 'Preview unavailable'; thumb.classList.add('small','text-danger'); console.error(error);
       });
     }
+    // Reserve a transparent final grid slot without adding a real PDF page.
+    const endSlot = document.createElement('div');
+    endSlot.id = 'pageDropEnd';
+    endSlot.className = 'col pe-none';
+    endSlot.setAttribute('aria-hidden', 'true');
+    // Keep the existing empty-state layout when there are no pages to drag.
+    endSlot.classList.toggle('d-none', pages.length === 0);
+    const endThumb = document.createElement('div');
+    endThumb.className = 'ratio border-0 bg-transparent';
+    endThumb.style.setProperty('--bs-aspect-ratio', '141.4%');
+    const endOverlay = document.createElement('div');
+    endOverlay.className = 'position-absolute top-0 start-0 w-100 h-100 pe-none z-3';
+    const endIcon = document.createElement('i');
+    endIcon.className = 'page-drop-destination bi bi-arrow-left-circle-fill text-success fs-3 position-absolute top-50 start-0 translate-middle-y ms-2 d-none';
+    endOverlay.append(endIcon);
+    endThumb.append(endOverlay);
+    endSlot.append(endThumb);
+    grid.append(endSlot);
     updateButtons();
     // Restore after the new thumbnails have established their layout.
     for (const [node, top, left] of scrollPositions) {
