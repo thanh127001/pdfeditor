@@ -230,29 +230,32 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     }
     updateButtons();
   }
-  // Keep the existing insertion-gap calculation without drawing a destination marker.
+  // Show the insertion side on the hovered page without rebuilding the grid.
   function clearDropDestinationIcon() {
     $('pages').querySelectorAll('.page-drop-destination').forEach(icon => icon.classList.add('d-none'));
   }
-  function showDropGap(index) {
-    // Preserve the original insertion index; only the visual feedback changes.
+  function showDropGap(index, targetIndex = index, side = 'left') {
     dropIndex = index;
     clearDropDestinationIcon();
-    const target = $('pages').children[index];
-    target?.querySelector('.page-drop-destination')?.classList.remove('d-none');
+    const target = $('pages').children[targetIndex];
+    target?.querySelector(`.page-drop-destination[data-drop-side="${side}"]`)?.classList.remove('d-none');
   }
   function findGap(x,y) {
     const cols = [...$('pages').children];
     if (!cols.length) return;
-    // A pointer over a page always inserts BEFORE that page.
-    // Any blank space (including grid gutters and outside the list) appends.
-    const targetIndex = cols.findIndex(col => {
+    // Left half inserts before the hovered page; right half inserts after it.
+    for (const [index, col] of cols.entries()) {
       const card = col.querySelector('.page-card');
-      if (!card) return false;
+      if (!card) continue;
       const r = card.getBoundingClientRect();
-      return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
-    });
-    showDropGap(targetIndex < 0 ? cols.length : targetIndex);
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+        const after = x >= (r.left + r.right) / 2;
+        showDropGap(index + (after ? 1 : 0), index, after ? 'right' : 'left');
+        return;
+      }
+    }
+    // Preserve the existing append behavior for blank space.
+    showDropGap(cols.length, cols.length - 1, 'right');
   }
   function stopScroll() {
     if (scrollFrame !== null) cancelAnimationFrame(scrollFrame);
@@ -347,10 +350,13 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       // Put the icon inside a full-size overlay so its own positioning remains intact.
       const destinationOverlay = document.createElement('div');
       destinationOverlay.className = 'position-absolute top-0 start-0 w-100 h-100 pe-none z-3';
-      const destinationIcon = document.createElement('i');
-      destinationIcon.className = 'page-drop-destination bi bi-arrow-left-circle-fill text-success fs-3 position-absolute top-50 start-0 translate-middle-y ms-2 d-none';
-      destinationIcon.setAttribute('aria-hidden', 'true');
-      destinationOverlay.append(destinationIcon);
+      for (const side of ['left', 'right']) {
+        const destinationIcon = document.createElement('i');
+        destinationIcon.dataset.dropSide = side;
+        destinationIcon.className = `page-drop-destination bi bi-arrow-${side}-circle-fill text-success fs-3 position-absolute top-50 translate-middle-y ${side === 'left' ? 'start-0 ms-2' : 'end-0 me-2'} d-none`;
+        destinationIcon.setAttribute('aria-hidden', 'true');
+        destinationOverlay.append(destinationIcon);
+      }
       const canvas = document.createElement('canvas'); canvas.className = 'position-absolute top-50 start-50 translate-middle mw-100 mh-100 object-fit-contain bg-white shadow-sm'; canvas.draggable = false; canvas.setAttribute('aria-label', `${tr('previewPage', 'Preview page')} ${i + 1}`); thumb.append(canvas, destinationOverlay);
       const actions = document.createElement('div'); actions.className = 'position-absolute top-0 start-0 w-100 h-100 pe-none d-flex flex-column justify-content-between p-2 gap-2';
       const topActions = document.createElement('div'); topActions.className = 'd-flex flex-wrap align-items-start justify-content-between gap-2';
