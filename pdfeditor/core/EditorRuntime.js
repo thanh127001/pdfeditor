@@ -412,6 +412,9 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         draggingIds = orderedSelection().map(p => p.id);
         suppressClickAfterDrag = true; e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', draggingIds.join(','));
+        // Center the native drag preview on the pointer, regardless of grab position.
+        const dragRect = card.getBoundingClientRect();
+        e.dataTransfer.setDragImage(card, Math.round(dragRect.width / 2), Math.round(dragRect.height / 2));
         dragPointer = {x: e.clientX, y: e.clientY};
         // Delay styling only; keep the native drag source mounted until drop.
         requestAnimationFrame(() => { if (draggingIds && card.isConnected) card.classList.add('opacity-50'); });
