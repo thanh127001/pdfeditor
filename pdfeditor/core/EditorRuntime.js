@@ -254,8 +254,9 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
         return;
       }
     }
-    // Preserve the existing append behavior for blank space.
-    showDropGap(cols.length, cols.length - 1, 'right');
+    // Blank space is not a valid drop target.
+    dropIndex = null;
+    clearDropDestinationIcon();
   }
   function stopScroll() {
     if (scrollFrame !== null) cancelAnimationFrame(scrollFrame);
