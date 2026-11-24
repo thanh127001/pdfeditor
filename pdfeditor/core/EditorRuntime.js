@@ -16,7 +16,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   const initialShapeDefaults = { stroke: "#0d6efd", strokeWidth: 2, opacity: 100, fill: "#ffffff", fillOpacity: 0, square: false, circle: false };
   const shapeDefaultsByTool = {
     Line: {...initialShapeDefaults},
-    Draw: {...initialShapeDefaults},
     Rectangle: {...initialShapeDefaults},
     Ellipse: {...initialShapeDefaults}
   };
@@ -79,7 +78,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     if (activeDetailsTool === 'PageSize') updateDetailsToolSelection();
     if (activeDetailsTool === "Text") renderTextOptions();
     if (activeDetailsTool === "Image") renderImageOptions();
-    if (["Line","Draw","Rectangle","Ellipse"].includes(activeDetailsTool)) renderShapeOptions();
+    if (["Line","Rectangle","Ellipse"].includes(activeDetailsTool)) renderShapeOptions();
   }
   async function renderDetailsPage() {
     const token = ++detailsRenderToken;
@@ -711,16 +710,16 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   let activeDetailsTool = null;
   const toolOptionLabels = {
     Highlight: 'Highlight options', Text: 'Text options', Image: 'Image options',
-    Line: 'Line options', Draw: 'Draw options', Rectangle: 'Rectangle options', Ellipse: 'Ellipse options'
+    Line: 'Line options', Rectangle: 'Rectangle options', Ellipse: 'Ellipse options'
   };
-  const deletableDetailsTools = ['Highlight','Text','Image','Line','Draw','Rectangle','Ellipse'];
+  const deletableDetailsTools = ['Highlight','Text','Image','Line','Rectangle','Ellipse'];
   function syncDetailsObjectDelete() {
     const page = currentPage();
     const selectedObject = page && (
       activeDetailsTool === 'Highlight' ? (page.highlights||[]).some(v=>v.id===selectedHighlightId) :
       activeDetailsTool === 'Text' ? (page.texts||[]).some(v=>v.id===selectedTextId) :
       activeDetailsTool === 'Image' ? (page.images||[]).some(v=>v.id===selectedImageId) :
-      ['Line','Draw','Rectangle','Ellipse'].includes(activeDetailsTool) ?
+      ['Line','Rectangle','Ellipse'].includes(activeDetailsTool) ?
         (page.shapes||[]).some(v=>v.id===selectedShapeId && v.type===activeDetailsTool) : false
     );
     document.querySelectorAll('[data-delete-tool]').forEach(button => {
@@ -738,7 +737,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     if(tool==='Highlight'){collection='highlights';id=selectedHighlightId;}
     else if(tool==='Text'){collection='texts';id=selectedTextId;}
     else if(tool==='Image'){collection='images';id=selectedImageId;}
-    else if(['Line','Draw','Rectangle','Ellipse'].includes(tool)){collection='shapes';id=selectedShapeId;}
+    else if(['Line','Rectangle','Ellipse'].includes(tool)){collection='shapes';id=selectedShapeId;}
     else return;
     if(!id || !(page[collection]||[]).some(v=>v.id===id && (collection!=='shapes'||v.type===tool)))return;
     recordPageEdit(page);
@@ -788,7 +787,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     if (activeDetailsTool === 'Highlight') { renderHighlightOptions(); return; }
     if (activeDetailsTool === 'Text') { renderTextOptions(); return; }
     if (activeDetailsTool === 'Image') { renderImageOptions(); return; }
-    if (['Line','Draw','Rectangle','Ellipse'].includes(activeDetailsTool)) { renderShapeOptions(); return; }
+    if (['Line','Rectangle','Ellipse'].includes(activeDetailsTool)) { renderShapeOptions(); return; }
     if (activeDetailsTool) {
       const label = document.createElement('span');
       label.className = 'small text-secondary';
@@ -849,7 +848,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     if (activeDetailsTool !== 'Highlight') selectedHighlightId = null;
     if (activeDetailsTool !== 'Text') selectedTextId = null;
     if (activeDetailsTool !== 'Image') { selectedImageId = null; pendingImage = null; }
-    if (!['Line','Draw','Rectangle','Ellipse'].includes(activeDetailsTool) || currentShape()?.type !== activeDetailsTool) selectedShapeId = null;
+    if (!['Line','Rectangle','Ellipse'].includes(activeDetailsTool) || currentShape()?.type !== activeDetailsTool) selectedShapeId = null;
     updateDetailsToolSelection();
     renderHighlights();
     renderTexts();
@@ -1517,7 +1516,7 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
   // Convert points to screen pixels only while rendering the current zoom.
   const shapeLayer = $('shapeLayer');
   const shapeStrokePixels = item => Math.max(0,Number(item.strokeWidth)||0)*shapeLayer.clientWidth/Math.max(1,detailsPageWidthPt);
-  const shapeTools = ['Line', 'Draw', 'Rectangle', 'Ellipse'];
+  const shapeTools = ['Line', 'Rectangle', 'Ellipse'];
   const currentShape = () => (currentPage()?.shapes || []).find(v => v.id === selectedShapeId && v.type === activeDetailsTool);
   function selectShape(id) {
     selectedShapeId = id;
@@ -1556,8 +1555,8 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
     }
     option('Line Width','range','strokeWidth',0,20,1);
     option('Line Color','color','stroke');
-    option(['Line','Draw'].includes(activeDetailsTool)?'Opacity':'Line Opacity','range','opacity',0,100,5);
-    if(!['Line','Draw'].includes(activeDetailsTool)) {
+    option(['Line'].includes(activeDetailsTool)?'Opacity':'Line Opacity','range','opacity',0,100,5);
+    if(!['Line'].includes(activeDetailsTool)) {
       option('Fill Color','color','fill');
       option('Fill Opacity','range','fillOpacity',0,100,5);
     }
@@ -1727,7 +1726,6 @@ export function initializeEditorRuntime(thisEditor, PdfEngine) {
       recordPageEdit(page);
       item={id:'shape-'+(++shapeCounter),type:activeDetailsTool,x:p.x,y:p.y,width:.2,height:.2,
         reverseX:false,reverseY:false,...currentShapeDefaults()};
-      if(activeDetailsTool==='Draw'){item.points=[{x:p.x,y:p.y}];item.angle=0;}
       (page.shapes ||= []).push(item);selectedShapeId=item.id;mode='create';
     }
     const bounds=hit?.getBoundingClientRect();
